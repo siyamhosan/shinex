@@ -1,0 +1,10 @@
+build
+node_modules
+.env
+
+
+# ignore all files with compiled.json in end of file name one example is src/main/events/bundle/events-compiled.json  
+
+**/commands-compiled.json
+**/slashCommands-compiled.json
+**/uniCommands-compiled.json
