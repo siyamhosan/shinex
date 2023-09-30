@@ -19,11 +19,17 @@ enum ProfileStatus {
 enum Badges {
   EARLYSUPPORTER
   MEMBER
+  REPORT_STAFF
+  APPEAL_STAFF
+  SHINEX_STAFF
+  SHINEX_ADMIN
 }
 
 enum Role {
+  OWNER
   ADMIN
   MODERATOR
+  REPORT_STAFF
   USER
 }
 
