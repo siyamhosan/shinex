@@ -2,8 +2,7 @@ import { Badges } from '@prisma/client'
 
 export const BadgeEmojis: Record<Badges, string> = {
   EARLYSUPPORTER: '<:Early_ShineX:1157673614611583016>',
-  MEMBER: '',
-  // <:shinex_admin:1157681259938594866> <:shinex_staff:1157677399778021437> <:report_shinex_staff:1157677327019425892> <:appeal_shinex_staff:1157677247914848267>
+  MEMBER: '<:shinex2:1157695759622357052>',
   APPEAL_STAFF: '<:appeal_shinex_staff:1157677247914848267>',
   REPORT_STAFF: '<:report_shinex_staff:1157677327019425892>',
   SHINEX_ADMIN: '<:shinex_admin:1157681259938594866>',
