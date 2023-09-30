@@ -30,7 +30,7 @@ export class ProfileCmd extends Command {
       embeds: [
         new EmbedBuilder({
           title: `${user.username}'s Profile`,
-          color: Colors.Orange,
+          color: 0x1b03a3,
           description: 'Loading...',
           footer: {
             text: 'Shinex | Vouching System. discord.gg/tnt2NYgUBB'

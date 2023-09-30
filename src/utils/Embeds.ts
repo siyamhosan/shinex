@@ -76,7 +76,7 @@ export function ProfileEmbed (profile: Profile, user: User) {
     embed.setColor(profile.color)
   } else {
     // TODO: Get Brightest Color from avatar and set it as embed color
-    embed.setColor(Colors.Orange)
+    embed.setColor(0x1b03a3)
   }
 
   embed.setThumbnail(user.displayAvatarURL())
@@ -117,7 +117,7 @@ export function VouchEmbed (vouch: Vouch) {
   if (vouch.vouchStatus === 'APPROVED') embed.setColor(Colors.Green)
   else if (vouch.vouchStatus === 'DENIED') embed.setColor(Colors.Red)
   else if (vouch.vouchStatus === 'PENDING_PROOF') embed.setColor(Colors.Yellow)
-  else embed.setColor(Colors.Orange)
+  else embed.setColor(0x1b03a3)
 
   if (vouch.controlledBy && vouch.controlledAt) {
     embed.addFields({
@@ -142,6 +142,6 @@ export class VouchNotification extends BotEmbed {
   constructor (data?: EmbedData | APIEmbed) {
     super(data)
     this.setTitle('Vouch Notification System')
-    this.setColor(Colors.Orange)
+    this.setColor(0x1b03a3)
   }
 }

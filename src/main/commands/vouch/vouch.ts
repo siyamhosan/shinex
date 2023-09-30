@@ -39,7 +39,7 @@ export class VouchCmd extends Command {
           new EmbedBuilder({
             title: 'Vouch Successful',
             description: `You have vouched <@${user.id}> with the comment \`${comment}\``,
-            color: Colors.Orange
+            color: 0x1b03a3
           })
         ]
       })

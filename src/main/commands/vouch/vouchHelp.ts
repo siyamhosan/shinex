@@ -26,7 +26,7 @@ export class VouchHelp extends Command {
     const embed = new BotEmbed({
       title: `Please vouch ${user.username}`,
       description: `Please vouch \`${user.username}\` with the comment \`${comment}\``,
-      color: Colors.Orange,
+      color: 0x1b03a3,
       fields: [
         {
           name: 'Command',

@@ -38,7 +38,7 @@ export class HelpCmd extends Command {
           value: command.aliases?.join(', ') || 'None'
         }
       )
-      embed.setColor(Colors.Orange)
+      embed.setColor(0x1b03a3)
 
       return message.channel
         .send({
@@ -74,7 +74,7 @@ export class HelpCmd extends Command {
         }
       })
     )
-    embed.setColor(Colors.Orange)
+    embed.setColor(0x1b03a3)
     embed.setThumbnail(client.user?.displayAvatarURL() || '')
 
     await message.channel

@@ -35,7 +35,7 @@ export class DenyReasonCmd extends Command {
             'You can also use custom reasons by typing the reason after the vouch id.'
         }
       )
-      .setColor(Colors.Orange)
+      .setColor(0x1b03a3)
 
     await message.channel.send({
       embeds: [embed]
