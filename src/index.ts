@@ -9,7 +9,7 @@ import './prisma.js'
 const bot = new Bot({
   commandsDir: path.join(process.cwd(), 'src', 'main', 'commands'),
   eventsDir: path.join(process.cwd(), 'src', 'main', 'events'),
-  prefix: '!',
+  prefix: '+',
   uniCommandsDir: path.join(process.cwd(), 'src', 'main', 'uniCommands'),
   slashCommandsDir: path.join(process.cwd(), 'src', 'main', 'slashCommands')
 })
