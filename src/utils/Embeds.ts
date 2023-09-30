@@ -1,6 +1,7 @@
 import { Profile, Vouch } from '@prisma/client'
 import { APIEmbed, Colors, EmbedBuilder, EmbedData, User } from 'discord.js'
 import { IsLink } from './fun.js'
+import { GetBadges } from './profile.js'
 
 export class BotEmbed extends EmbedBuilder {
   constructor (data?: EmbedData | APIEmbed) {
@@ -52,6 +53,10 @@ export function ProfileEmbed (profile: Profile, user: User) {
       value: `**Positive:** ${profile.positiveVouches}\n**Import:**: ${
         profile.importedVouches
       }\n**Overall:** ${profile.positiveVouches + profile.importedVouches}`
+    },
+    {
+      name: '__Badges__',
+      value: GetBadges(profile.badges)
     },
     {
       name: '__Products and Services__',

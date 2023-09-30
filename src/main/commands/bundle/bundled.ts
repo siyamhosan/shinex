@@ -5,6 +5,7 @@ import { BotEmbed, ProfileEmbed, VouchEmbed, VouchNotification } from '../../../
 import { Colors, EmbedBuilder, Message } from 'discord.js'
 import { del60, del9, del5, del30 } from '../../../utils/fun.js'
 import { UpdateProfile, GetProfile } from '../../../cache/profile.js'
+import { Badges } from '@prisma/client'
 import prisma from '../../../prisma.js'
 import { OnApprove, DenyReasons, OnDeny, CreatedVouch } from '../../../utils/vouch.js'
 
@@ -325,6 +326,63 @@ export class SetShopCmd extends Command {
         embeds: [embed]
       })
       .then(del9)
+  }
+}
+
+// Content From D:\Devloper project\DISCORD TS\shinex\src\main\commands/staff/addBadge.ts
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+
+export class AddBadgeCmd extends Command {
+  constructor () {
+    super({
+      name: 'addbadge',
+      description: 'Add a badge to a user',
+      category: 'Staff',
+      manager: true,
+      args: true,
+      usage: '<user> <badge>'
+    })
+  }
+
+  async run ({ message, args }: CommandRun) {
+    const user =
+      message.mentions.users.first() ||
+      message.guild?.members.cache.get(args[0])?.user
+    if (!user) return message.reply('You must mention a user to add badge.')
+    const badge = args.slice(1).join(' ').toUpperCase()
+    if (!badge) {
+      return message.reply('You must provide a badge to add to the user.')
+    }
+
+    if (
+      Badges[badge as Badges] === undefined ||
+      Badges[badge as Badges] === null
+    ) {
+      return message.reply(
+        'Invalid Badge\n' + Object.keys(Badges).join(', ') + '.'
+      )
+    }
+
+    const embed = new BotEmbed()
+    embed.setTitle('Staff Tools')
+    embed.setDescription(
+      `user: \`${user.username}\` is added with badge \`${badge}\``
+    )
+    embed.setColor(Colors.Red)
+    embed.setFooter({
+      text: 'Badge added by ' + message.author.username + ' | Shinex'
+    })
+
+    await UpdateProfile(user.id, {
+      // @ts-ignore
+      badges: {
+        push: badge
+      }
+    })
+
+    await message.channel.send({
+      embeds: [embed]
+    })
   }
 }
 

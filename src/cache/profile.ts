@@ -18,7 +18,8 @@ export async function CreateProfile ({
       products: 'Set your products',
       shop: 'Set your shop',
       userId,
-      username
+      username,
+      badges: ['EARLYSUPPORTER']
     }
   })
   console.timeEnd('CreateProfile')
