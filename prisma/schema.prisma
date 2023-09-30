@@ -9,3 +9,92 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum ProfileStatus {
+  GOOD
+  WARN
+  SCAMMER
+}
+
+enum Badges {
+  EARLYSUPPORTER
+  MEMBER
+}
+
+enum Role {
+  ADMIN
+  MODERATOR
+  USER
+}
+
+model Profile {
+  id       Int    @id @default(autoincrement())
+  userId   String @unique
+  username String
+
+  role          Role          @default(USER)
+  profileStatus ProfileStatus @default(GOOD)
+
+  warningBy     String?
+  warningByUser String?
+  waringReason  String?
+  warningAt     DateTime?
+
+  markedBy     String?
+  markedByUser String?
+  markedFor    String?
+  markedAt     DateTime?
+
+  color           Int?
+  badges          Badges[]
+  shop            String?  @default("Set your shop")
+  forum           String?  @default("Set your forum")
+  products        String?  @default("Set your products")
+  banner          String?  @default("")
+  positiveVouches Int      @default(0)
+  importedVouches Int      @default(0)
+
+  latestComments String[]
+
+  vouches Vouch[]
+
+  createdAt DateTime @default(now())
+
+  @@index([userId], name: "userId")
+}
+
+enum VouchStatus {
+  UNCHECKED
+  PENDING_PROOF
+  APPROVED
+  DENIED
+}
+
+model Vouch {
+  id     Int     @id @default(autoincrement())
+  userId Int
+  user   Profile @relation(fields: [userId], references: [id])
+
+  vouchStatus VouchStatus @default(UNCHECKED)
+
+  voucherId   String
+  voucherName String
+
+  receiverId   String
+  receiverName String
+
+  comment String
+
+  controlledBy String?
+  controlledAt DateTime?
+
+  serverId   String
+  serverName String
+
+  controllerMessageId String?
+
+  deniedReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

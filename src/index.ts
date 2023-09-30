@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { exec } from 'child_process'
 import 'dotenv/config.js'
-import { Bot, Compiler, EventManager } from 'dtscommands'
+import { Bot, CommandManager, Compiler, EventManager } from 'dtscommands'
 import { writeFileSync } from 'fs'
 import path from 'path'
+import './prisma.js'
 
 const bot = new Bot({
   commandsDir: path.join(process.cwd(), 'src', 'main', 'commands'),
@@ -13,21 +14,8 @@ const bot = new Bot({
   slashCommandsDir: path.join(process.cwd(), 'src', 'main', 'slashCommands')
 })
 
-CompileManager(bot.config.eventsDir, 'events')
-CompileManager(bot.config.commandsDir, 'commands')
-CompileManager(bot.config.slashCommandsDir, 'slashCommands')
+main()
 
-bot.login().then(() => {
-  const watchers = [
-    'unhandledRejection',
-    'uncaughtException',
-    'uncaughtExceptionMonitor'
-  ]
-
-  watchers.forEach(str => {
-    process.on(str, console.error)
-  })
-})
 export default bot
 
 const DynamicImport = async (path: string) =>
@@ -56,6 +44,35 @@ async function CompileManager (path: string, of: string) {
 
     const allImports = await DynamicImport(`./main/${of}/bundle/bundled.js`)
 
-    EventManager(bot, exportedClasses, allImports)
+    switch (of) {
+      case 'events':
+        EventManager(bot, exportedClasses, allImports)
+        break
+      case 'commands':
+        CommandManager(bot, exportedClasses, allImports)
+        break
+      case 'slashCommands':
+        // SlashManager(bot, exportedClasses, allImports)
+        break
+    }
+  })
+}
+
+async function main () {
+  await CompileManager(bot.config.eventsDir, 'events')
+  await CompileManager(bot.config.commandsDir, 'commands')
+  await CompileManager(bot.config.slashCommandsDir, 'slashCommands')
+
+  await bot.login().then(() => {
+    console.log('Logged in')
+    const watchers = [
+      'unhandledRejection',
+      'uncaughtException',
+      'uncaughtExceptionMonitor'
+    ]
+
+    watchers.forEach(str => {
+      process.on(str, console.error)
+    })
   })
 }

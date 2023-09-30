@@ -3,6 +3,8 @@
 import { EmbedBuilder, SlashCommandBuilder } from 'discord.js'
 import { SlashCommand, SlashCommandRun } from 'dtscommands'
 
+// Content From D:\Devloper project\DISCORD TS\shinex\src\main\slashCommands/Bot/ping.ts
+
 export class PingCmd extends SlashCommand {
   constructor () {
     super({
