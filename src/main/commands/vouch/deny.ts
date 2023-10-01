@@ -12,7 +12,7 @@ export class DenyVouchCmd extends Command {
       description: 'Deny a vouch',
       category: 'Vouch',
       aliases: ['d'],
-      manager: true,
+      validation: ['vouch_staff'],
       args: true,
       usage: '<vouchId> <reason>'
     })

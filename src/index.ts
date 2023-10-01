@@ -5,13 +5,32 @@ import { Bot, CommandManager, Compiler, EventManager } from 'dtscommands'
 import { writeFileSync } from 'fs'
 import path from 'path'
 import './prisma.js'
+import * as Role from './cache/role.js'
 
 const bot = new Bot({
   commandsDir: path.join(process.cwd(), 'src', 'main', 'commands'),
   eventsDir: path.join(process.cwd(), 'src', 'main', 'events'),
-  prefix: '+',
+  prefix: process.env.PREFIX || ',',
   uniCommandsDir: path.join(process.cwd(), 'src', 'main', 'uniCommands'),
-  slashCommandsDir: path.join(process.cwd(), 'src', 'main', 'slashCommands')
+  slashCommandsDir: path.join(process.cwd(), 'src', 'main', 'slashCommands'),
+  mentionMessage: { content: 'My prefix is: `+`\nUse `+help` to get started!' },
+  customValidations: [
+    {
+      name: 'vouch_staff',
+      onFail: 'You are not a staff member!',
+      validate: ({ message, interaction }) => {
+        return (
+          Role.OwnerStaffs.has(
+            message?.author.id || interaction?.user.id || ''
+          ) ||
+          Role.AdminStaffs.has(
+            message?.author.id || interaction?.user.id || ''
+          ) ||
+          Role.VouchStaffs.has(message?.author.id || interaction?.user.id || '')
+        )
+      }
+    }
+  ]
 })
 
 main()
