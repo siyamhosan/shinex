@@ -11,7 +11,7 @@ export class MarkCmd extends Command {
       category: 'Staff',
       args: true,
       usage: '<user> <reason>',
-      manager: true
+      validation: ['vouch_staff']
     })
   }
 

@@ -11,7 +11,7 @@ export class AddBadgeCmd extends Command {
       name: 'addbadge',
       description: 'Add a badge to a user',
       category: 'Staff',
-      manager: true,
+      validation: ['vouch_staff'],
       args: true,
       usage: '<user> <badge>'
     })

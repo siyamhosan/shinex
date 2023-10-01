@@ -12,7 +12,7 @@ export class ApproveVouchCmd extends Command {
       description: 'Approve a vouch',
       category: 'Vouch',
       aliases: ['a', 'accept'],
-      manager: true,
+      validation: ['vouch_staff'],
       args: true,
       usage: '<vouchId>'
     })

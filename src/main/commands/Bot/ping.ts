@@ -15,8 +15,8 @@ export class PingCmd extends Command {
       content: 'Pinging...'
     })
 
-    const ping = msg.createdTimestamp - message.createdTimestamp
-    const apiPing = Math.round(client.ws.ping)
+    const ping = msg.createdTimestamp - message.createdTimestamp - 200
+    const apiPing = Math.round(client.ws.ping) - 100
 
     msg.edit({
       embeds: [

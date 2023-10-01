@@ -1,7 +1,6 @@
 import { Command, CommandRun } from 'dtscommands'
 import { BotEmbed } from '../../../utils/Embeds.js'
 import { DenyReasons } from '../../../utils/vouch.js'
-import { Colors } from 'discord.js'
 
 export class DenyReasonCmd extends Command {
   constructor () {
@@ -9,7 +8,7 @@ export class DenyReasonCmd extends Command {
       name: 'denyreason',
       description: 'See the deny reasons for a vouch',
       category: 'Staff',
-      manager: true
+      validation: ['vouch_staff']
     })
   }
 

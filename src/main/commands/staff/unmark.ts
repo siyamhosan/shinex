@@ -11,7 +11,7 @@ export class UnMarkCmd extends Command {
       category: 'Staff',
       args: true,
       usage: '<user>',
-      manager: true
+      validation: ['vouch_staff']
     })
   }
 
