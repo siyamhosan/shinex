@@ -50,7 +50,7 @@ export function ProfileEmbed (profile: Profile, user: User) {
   embed.setFields(
     {
       name: '__Vouch Information__',
-      value: `**Positive:** ${profile.positiveVouches}\n**Import:**: ${
+      value: `**Positive:** ${profile.positiveVouches}\n**Import:** ${
         profile.importedVouches
       }\n**Overall:** ${profile.positiveVouches + profile.importedVouches}`
     },
@@ -60,7 +60,7 @@ export function ProfileEmbed (profile: Profile, user: User) {
     },
     {
       name: '__Products and Services__',
-      value: `**Shop:**: ${profile.shop}\n**Forum:** ${profile.forum}\n**Products:** ${profile.products}`
+      value: `**Shop:** ${profile.shop}\n**Forum:** ${profile.forum}\n**Products:** ${profile.products}`
     },
     {
       name: '__Last 5 Comments__',
@@ -97,15 +97,15 @@ export function VouchEmbed (vouch: Vouch) {
     fields: [
       {
         name: '__Recipient Info__',
-        value: `**Username:**${vouch.receiverName}\n**Id:**${vouch.receiverId}`
+        value: `**Username:** ${vouch.receiverName}\n**Id:** ${vouch.receiverId}`
       },
       {
         name: '__Giver Info__',
-        value: `**Username:**${vouch.voucherName}\n**Id:**${vouch.voucherId}`
+        value: `**Username:** ${vouch.voucherName}\n**Id:** ${vouch.voucherId}`
       },
       {
         name: '__Server Info__',
-        value: `**Name:**${vouch.serverName}\n**Id:**${vouch.serverId}`
+        value: `**Name:** ${vouch.serverName}\n**Id:** ${vouch.serverId}`
       },
       {
         name: '__Comment__',

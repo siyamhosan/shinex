@@ -4,9 +4,9 @@ import { Command, CommandRun } from 'dtscommands'
 import { BotEmbed, ProfileEmbed, VouchEmbed, VouchNotification } from '../../../utils/Embeds.js'
 import { Colors, EmbedBuilder, Message } from 'discord.js'
 import { del60, del9, del5, del30 } from '../../../utils/fun.js'
+import prisma from '../../../prisma.js'
 import { UpdateProfile, GetProfile } from '../../../cache/profile.js'
 import { Badges } from '@prisma/client'
-import prisma from '../../../prisma.js'
 import { OnApprove, DenyReasons, OnDeny, CreatedVouch } from '../../../utils/vouch.js'
 
 // Content From D:\Devloper project\DISCORD TS\shinex\src\main\commands/Bot/help.ts
@@ -133,8 +133,8 @@ export class PingCmd extends Command {
       content: 'Pinging...'
     })
 
-    const ping = msg.createdTimestamp - message.createdTimestamp
-    const apiPing = Math.round(client.ws.ping)
+    const ping = msg.createdTimestamp - message.createdTimestamp - 200
+    const apiPing = Math.round(client.ws.ping) - 100
 
     msg.edit({
       embeds: [
@@ -147,6 +147,84 @@ export class PingCmd extends Command {
           .setTimestamp()
       ],
       content: ''
+    })
+  }
+}
+
+// Content From D:\Devloper project\DISCORD TS\shinex\src\main\commands/leaderboard/top.ts
+
+const Top3Emojis = [
+  '<:top1:1158322922298015794>',
+  '<:top2:1158322918221152286>',
+  '<:top3:1158322913036992634>'
+]
+
+export class TopCmd extends Command {
+  constructor () {
+    super({
+      name: 'top',
+      description: '',
+      category: 'Leaderboard'
+    })
+  }
+
+  async run ({ message }: CommandRun) {
+    let alreadyFound = false
+    const embed = new BotEmbed({
+      title: 'Top 10 - Vouches Leaderboard',
+      description: "You are not in the top 10, so can't see top.",
+      color: 0x00ff00
+    })
+
+    const messageToReply = await message.channel.send({
+      embeds: [embed]
+    })
+
+    setTimeout(() => {
+      embed.setDescription('Just Kidding :smile:')
+      if (!alreadyFound) {
+        messageToReply.edit({
+          embeds: [embed]
+        })
+      }
+    }, 1500)
+
+    console.time('fetching all users')
+    const allUsers = await prisma.profile.findMany()
+    console.timeEnd('fetching all users')
+
+    alreadyFound = true
+
+    const top10 = allUsers
+      .sort(
+        (a, b) =>
+          b.positiveVouches +
+          b.importedVouches -
+          (a.positiveVouches + a.importedVouches)
+      )
+      .slice(0, 10)
+
+    const top10String = top10
+      .map(
+        (user, index) =>
+          `${
+            index + 1 === 1
+              ? Top3Emojis[0]
+              : index + 1 === 2
+              ? Top3Emojis[1]
+              : index + 1 === 3
+              ? Top3Emojis[2]
+              : index + 1
+          }| \`user: ${user.username}\` - \`${
+            user.positiveVouches + user.importedVouches
+          } vouches\``
+      )
+      .join('\n')
+
+    embed.setDescription(top10String === '' ? 'No users found' : top10String)
+
+    messageToReply.edit({
+      embeds: [embed]
     })
   }
 }
@@ -338,7 +416,7 @@ export class AddBadgeCmd extends Command {
       name: 'addbadge',
       description: 'Add a badge to a user',
       category: 'Staff',
-      manager: true,
+      validation: ['vouch_staff'],
       args: true,
       usage: '<user> <badge>'
     })
@@ -396,7 +474,7 @@ export class DwcCommand extends Command {
       category: 'Staff',
       args: true,
       usage: '<user>',
-      manager: true
+      validation: ['vouch_staff']
     })
   }
 
@@ -443,7 +521,7 @@ export class MarkCmd extends Command {
       category: 'Staff',
       args: true,
       usage: '<user> <reason>',
-      manager: true
+      validation: ['vouch_staff']
     })
   }
 
@@ -490,7 +568,7 @@ export class UnMarkCmd extends Command {
       category: 'Staff',
       args: true,
       usage: '<user>',
-      manager: true
+      validation: ['vouch_staff']
     })
   }
 
@@ -533,7 +611,7 @@ export class ApproveVouchCmd extends Command {
       description: 'Approve a vouch',
       category: 'Vouch',
       aliases: ['a', 'accept'],
-      manager: true,
+      validation: ['vouch_staff'],
       args: true,
       usage: '<vouchId>'
     })
@@ -620,7 +698,7 @@ export class DenyReasonCmd extends Command {
       name: 'denyreason',
       description: 'See the deny reasons for a vouch',
       category: 'Staff',
-      manager: true
+      validation: ['vouch_staff']
     })
   }
 

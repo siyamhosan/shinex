@@ -1,8 +1,8 @@
+import { EmbedBuilder, Message } from 'discord.js'
 import { Command, CommandRun } from 'dtscommands'
 import prisma from '../../../prisma.js'
-import { Colors, EmbedBuilder, Message } from 'discord.js'
-import { CreatedVouch } from '../../../utils/vouch.js'
 import { VouchNotification } from '../../../utils/Embeds.js'
+import { CreatedVouch } from '../../../utils/vouch.js'
 
 export class VouchCmd extends Command {
   constructor () {
