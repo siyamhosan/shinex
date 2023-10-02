@@ -8,3 +8,5 @@ node_modules
 **/commands-compiled.json
 **/slashCommands-compiled.json
 **/uniCommands-compiled.json
+
+**/bundled.ts
