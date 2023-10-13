@@ -9,7 +9,7 @@ export class BotEmbed extends EmbedBuilder {
   constructor (data?: EmbedData | APIEmbed) {
     super(data)
     this.setFooter({
-      text: 'Shinex | Vouching System. discord.gg/tnt2NYgUBB'
+      text: 'Shinex | Vouching System. discord.gg/9ZhRGmXcJK'
     })
     this.setColor(bot.config.themeColors.PRIMARY)
     this.setTimestamp(new Date())
@@ -34,7 +34,7 @@ export function ProfileEmbed (profile: Profile, user: User) {
     )
     embed.setThumbnail(user.displayAvatarURL())
     embed.setFooter({
-      text: `Marked by ${profile.markedByUser} | Shinex. discord.gg/tnt2NYgUBB`
+      text: `Marked by ${profile.markedByUser} | Shinex. discord.gg/9ZhRGmXcJK`
     })
 
     return embed
