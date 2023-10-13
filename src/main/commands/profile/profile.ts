@@ -1,7 +1,7 @@
-import { Colors, EmbedBuilder } from 'discord.js'
+import { GuildMember } from 'discord.js'
 import { Command, CommandRun } from 'dtscommands'
 import { GetProfile } from '../../../cache/profile.js'
-import { ProfileEmbed } from '../../../utils/Embeds.js'
+import { BotEmbed, ProfileEmbed } from '../../../utils/Embeds.js'
 
 export class ProfileCmd extends Command {
   constructor () {
@@ -14,35 +14,41 @@ export class ProfileCmd extends Command {
     })
   }
 
-  async run ({ message, args, client }: CommandRun) {
-    let user = message.mentions.users?.first() || message.author
+  async run ({ message, args }: CommandRun) {
+    let user: GuildMember | null | undefined = message.member
 
-    if (args[0] && !message.mentions.users?.first()) {
-      user = await client.users.fetch(args[0])
+    if (args[0] && args[0].startsWith('<@') && args[0].endsWith('>')) {
+      user = await message.guild?.members.fetch(
+        args[0].replace('<@', '').replace('>', '')
+      )
+    } else if (args[0] && /\d+/.test(args[0])) {
+      user = await message.guild?.members.fetch(args[0])
+    } else if (args[0]) {
+      const users = await message.guild?.members.search({
+        query: args[0]
+      })
+      user = users?.first()
     }
     if (!user) {
       return message.reply('unknown user')
     }
 
-    if (user.bot) return
+    if (user.user.bot) return
 
     const messageToReply = await message.channel.send({
       embeds: [
-        new EmbedBuilder({
-          title: `${user.username}'s Profile`,
+        new BotEmbed({
+          title: `${user.user.username}'s Profile`,
           color: 0x1b03a3,
-          description: 'Loading...',
-          footer: {
-            text: 'Shinex | Vouching System. discord.gg/tnt2NYgUBB'
-          }
+          description: 'Loading...'
         })
       ]
     })
 
-    const profile = await GetProfile(user.id, user.username)
+    const profile = await GetProfile(user.id, user.user.username)
 
     try {
-      const embed = ProfileEmbed(profile, user)
+      const embed = ProfileEmbed(profile, user.user)
 
       await messageToReply
         .edit({

@@ -1,9 +1,11 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import { Vouch } from '@prisma/client'
+import { Vouch, VouchStatus } from '@prisma/client'
 import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  Message,
+  StringSelectMenuBuilder,
   TextChannel,
   User
 } from 'discord.js'
@@ -11,25 +13,38 @@ import { UpdateProfile } from '../cache/profile.js'
 import client from '../index.js'
 import prisma from '../prisma.js'
 import { VouchEmbed, VouchNotification } from './Embeds.js'
+import {
+  VOUCH_ACCEPTED_CHANNEL_ID,
+  VOUCH_DENIED_CHANNEL_ID,
+  VOUCH_LOG_CHANNEL_ID,
+  VOUCH_PENDING_CHANNEL_ID,
+  VOUCH_UNCHECKED_CHANNEL_ID
+} from '../config.js'
 
 export async function CreatedVouch (vouch: Vouch) {
-  const channel = client.channels.cache.get(
-    process.env.VOUCHES_CHANNEL || ''
+  const VOUCH_LOG_CHANNEL = client.channels.cache.get(
+    VOUCH_LOG_CHANNEL_ID
   ) as TextChannel
-  if (!channel) return
 
-  const embed = VouchEmbed(vouch)
+  const embed = new VouchEmbed(vouch)
 
+  const denySelectMenu = new ActionRowBuilder().addComponents(
+    new StringSelectMenuBuilder()
+      .setCustomId(`vouch:${vouch.id}:deny`)
+      .setPlaceholder('Select a Deny reason')
+      .setOptions(
+        Object.entries(DenyReasons).map(([key, value]) => ({
+          label: key,
+          value: key,
+          description: value.length < 50 ? value : value.slice(0, 50) + '...'
+        }))
+      )
+  )
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder({
       customId: `vouch:${vouch.id}:accept`,
       label: 'Accept',
       style: ButtonStyle.Success
-    }),
-    new ButtonBuilder({
-      customId: `vouch:${vouch.id}:deny`,
-      label: 'Deny',
-      style: ButtonStyle.Danger
     }),
     new ButtonBuilder({
       customId: `vouch:${vouch.id}:proofreceiver`,
@@ -43,11 +58,19 @@ export async function CreatedVouch (vouch: Vouch) {
     })
   )
 
-  const message = await channel.send({
-    embeds: [embed],
+  const message = await VOUCH_LOG_CHANNEL.send({
+    embeds: [embed.setLog(true)]
+  })
+
+  const VOUCH_UNCHECKED_CHANNEL = client.channels.cache.get(
+    VOUCH_UNCHECKED_CHANNEL_ID
+  ) as TextChannel
+
+  await VOUCH_UNCHECKED_CHANNEL.send({
+    embeds: [embed.setControl(true)],
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    components: [row]
+    components: [row, denySelectMenu]
   })
 
   await prisma.vouch.update({
@@ -61,45 +84,38 @@ export async function CreatedVouch (vouch: Vouch) {
 }
 
 export async function UpdateController (vouch: Vouch) {
-  const channel = client.channels.cache.get(
-    process.env.VOUCHES_CHANNEL || ''
+  const VOUCH_LOG_CHANNEL = client.channels.cache.get(
+    VOUCH_LOG_CHANNEL_ID
   ) as TextChannel
-  if (!channel) return
 
-  const embed = VouchEmbed(vouch)
+  const embed = new VouchEmbed(vouch)
 
-  const message = await channel.messages.fetch(vouch.controllerMessageId ?? '')
+  const message = await VOUCH_LOG_CHANNEL.messages.fetch(
+    vouch.controllerMessageId ?? ''
+  )
   if (!message) return
 
-  const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder({
-      customId: `vouch:${vouch.id}:accept`,
-      label: 'Accept',
-      style: ButtonStyle.Success
-    }),
-    new ButtonBuilder({
-      customId: `vouch:${vouch.id}:deny`,
-      label: 'Deny',
-      style: ButtonStyle.Danger
-    })
-  )
-
   await message.edit({
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    components: vouch.vouchStatus === 'PENDING_PROOF' ? [row] : [],
     embeds: [embed]
   })
 }
 
-export async function OnApprove (vouch: Vouch, approver: User) {
+export async function OnApprove (
+  vouch: Vouch,
+  approver: User,
+  message?: Message
+) {
   const embed = new VouchNotification({
     description: `Your vouch with the id \`${vouch.id}\` has been approved`
   })
 
-  ;(await client.users.fetch(vouch.receiverId))?.send({
-    embeds: [embed]
-  })
+  ;(await client.users.fetch(vouch.receiverId))
+    ?.send({
+      embeds: [embed]
+    })
+    .catch(() => {
+      console.log('Failed to send vouch notification to user')
+    })
 
   const updatedVouch = await prisma.vouch.update({
     where: {
@@ -124,11 +140,23 @@ export async function OnApprove (vouch: Vouch, approver: User) {
       push: vouch.comment
     }
   })
+
+  if (message) {
+    await message.delete().catch(() => null)
+  }
+
+  const VOUCH_ACCEPTED_CHANNEL = client.channels.cache.get(
+    VOUCH_ACCEPTED_CHANNEL_ID
+  ) as TextChannel
+  await VOUCH_ACCEPTED_CHANNEL.send({
+    embeds: [new VouchEmbed(updatedVouch)]
+  })
 }
 
 export async function OnDeny (
   vouch: Vouch,
   denier: User,
+  message?: Message,
   reason: string | null = null
 ) {
   const embed = new VouchNotification({
@@ -154,15 +182,31 @@ export async function OnDeny (
   })
 
   await UpdateController(updatedVouch)
+
+  if (message) {
+    await message.delete().catch(() => null)
+  }
+
+  const VOUCH_DENIED_CHANNEL = client.channels.cache.get(
+    VOUCH_DENIED_CHANNEL_ID
+  ) as TextChannel
+  await VOUCH_DENIED_CHANNEL.send({
+    embeds: [new VouchEmbed(updatedVouch)]
+  })
 }
 
 export async function OnAskProof (
   vouch: Vouch,
   asker: User,
-  to: 'RECEIVER' | 'VOUCHER'
+  to: 'RECEIVER' | 'VOUCHER',
+  message?: Message
 ) {
   const embed = new VouchNotification({
-    description: `Your vouch with the id \`${vouch.id}\` has been asked for proof`
+    description:
+      to === 'RECEIVER'
+        ? `The Vouch Id \`${vouch.id}\` Is Being **Asked Proof By Our Staffs**. To provide proof for your vouch with ID \`${vouch.id}\`, please visit our [Support Server](https://discord.gg/9XUdB2eK3m) > [Shinex Support](https://discord.com/channels/1157258354821971998/1160905771253506048). Our vouch policy requires vouches to be substantiated with proof. Failure to provide the necessary proof may result in **You being blacklisted or blocked**, as per our vouch policy.`
+        : `**Thanks for your vouch for **\`${vouch.receiverName} ( ${vouch.receiverId} )\`. To make sure the trade  \`${vouch.comment}\` was legit/some good word.
+        **The Vouch** \`${vouch.id}\` **is being asked for proof by our Staff**. To provide proof for your vouch with ID \`${vouch.id}\`, please visit our [Support Server](https://discord.gg/9XUdB2eK3m) > [Shinex Support](https://discord.com/channels/1157258354821971998/1160905771253506048). Our vouch policy requires vouches to be substantiated with proof. Failure to provide the necessary proof may result in **Seller being blacklisted or blocked**, as per our vouch policy.`
   })
 
   ;(
@@ -185,6 +229,97 @@ export async function OnAskProof (
   })
 
   await UpdateController(updatedVouch)
+
+  if (message) {
+    await message.delete().catch(() => null)
+  }
+
+  const VOUCH_PENDING_CHANNEL = client.channels.cache.get(
+    VOUCH_PENDING_CHANNEL_ID
+  ) as TextChannel
+
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder({
+      customId: `vouch:${vouch.id}:accept`,
+      label: 'Accept',
+      style: ButtonStyle.Success
+    }),
+    new ButtonBuilder({
+      customId: `vouch:${vouch.id}:deny`,
+      label: 'Deny',
+      style: ButtonStyle.Danger
+    })
+  )
+
+  await VOUCH_PENDING_CHANNEL.send({
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    components: updatedVouch.vouchStatus === 'PENDING_PROOF' ? [row] : [],
+    embeds: [new VouchEmbed(updatedVouch)]
+  })
+}
+export function VouchControl (
+  vouch: Vouch,
+  { disableAccept, disableDeny, disableProofReceiver, disableProofVoucher } = {
+    disableAccept: false,
+    disableDeny: false,
+    disableProofReceiver: false,
+    disableProofVoucher: false
+  },
+  { needAccept, needDeny, needProofReceiver, needProofVoucher } = {
+    needAccept: true,
+    needDeny: false,
+    needProofReceiver: true,
+    needProofVoucher: true
+  }
+) {
+  const row = new ActionRowBuilder()
+
+  if (needAccept) {
+    row.addComponents(
+      new ButtonBuilder({
+        customId: `vouch:${vouch.id}:accept`,
+        label: 'Accept',
+        style: ButtonStyle.Success,
+        disabled: disableAccept
+      })
+    )
+  }
+
+  if (needDeny) {
+    row.addComponents(
+      new ButtonBuilder({
+        customId: `vouch:${vouch.id}:deny`,
+        label: 'Deny',
+        style: ButtonStyle.Danger,
+        disabled: disableDeny
+      })
+    )
+  }
+
+  if (needProofReceiver) {
+    row.addComponents(
+      new ButtonBuilder({
+        customId: `vouch:${vouch.id}:proofreceiver`,
+        label: 'Proof R',
+        style: ButtonStyle.Primary,
+        disabled: disableProofReceiver
+      })
+    )
+  }
+
+  if (needProofVoucher) {
+    row.addComponents(
+      new ButtonBuilder({
+        customId: `vouch:${vouch.id}:proofvoucher`,
+        label: 'Proof G',
+        style: ButtonStyle.Primary,
+        disabled: disableProofVoucher
+      })
+    )
+  }
+
+  return row
 }
 
 export const DenyReasons = {
@@ -196,7 +331,7 @@ export const DenyReasons = {
   PRICE:
     "The vouch Here Doesn't Have A Clear Or Understandable Price. Remember Use Always The Real Country Code/Abbreviations For Money Value. Therefore Vouch Is Denied.",
   DETAILS:
-    "The Vouch Here Doesn't Give Enough Details Or Isn't Intelligible, Provide all Details A Small Detail Mustn't Be Missed. So Therefore, This vouch is denied.",
+    "The Vouch Here Doesn't Give Enough Details Or Isn't Intelligible, Provide all Details A Small Detail Mustn't Be Missed.\nSo Therefore, This vouch is denied.",
   SCAM: 'This Vouch Is Subject Of Scam Which Is handled by reports in shinex. Join our  Server To Get Them Reported. So Therefore, This vouch Denied',
   FRAUD:
     'Fraud = This Vouch Either Violates Discord Or Shinex Terms & Conditions Over Transaction. So therefore it is denied.',
@@ -207,4 +342,28 @@ export const DenyReasons = {
   BOT: "Shinex Currently Do Not Accept Any Vouch Where the Transaction Wasn't Filled in A Real Currency. So therefore, the vouch is denied.",
   ENGLISH:
     'The Vouch Must Contain English Sentences Only. Words From Other Languages Are Accepted But Not sentences. \nSo therefore, Vouch Is denied.'
+}
+
+export const VouchStatusMap: Record<VouchStatus, string> = {
+  APPROVED: '✅`Approved`',
+  DENIED: '❌`Denied`',
+  PENDING_PROOF: '📝`Pending Proof`',
+  UNCHECKED: '🔍`Unchecked`'
+}
+
+export const VouchStatusShortMap: Record<string, VouchStatus> = {
+  PENDING: 'PENDING_PROOF',
+  PROOF: 'PENDING_PROOF',
+  APPROVE: 'APPROVED',
+  APPROVED: 'APPROVED',
+  DENY: 'DENIED',
+  DENIED: 'DENIED',
+  UNCHECKED: 'UNCHECKED',
+  GOOD: 'APPROVED',
+  BAD: 'DENIED',
+  CHECK: 'UNCHECKED',
+  TOCHECK: 'UNCHECKED',
+  TOVERIFY: 'UNCHECKED',
+  VERIFY: 'UNCHECKED',
+  UNVERIFIED: 'UNCHECKED'
 }

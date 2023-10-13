@@ -14,6 +14,7 @@ const bot = new Bot({
   uniCommandsDir: path.join(process.cwd(), 'src', 'main', 'uniCommands'),
   slashCommandsDir: path.join(process.cwd(), 'src', 'main', 'slashCommands'),
   mentionMessage: { content: 'My prefix is: `+`\nUse `+help` to get started!' },
+  additionalPrefixes: process.env.DEV ? [] : ['-', ','],
   customValidations: [
     {
       name: 'vouch_staff',

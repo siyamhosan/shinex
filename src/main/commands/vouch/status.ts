@@ -1,7 +1,8 @@
 import { Command, CommandRun } from 'dtscommands'
 import prisma from '../../../prisma.js'
-import { VouchEmbed } from '../../../utils/Embeds.js'
+import { BotEmbed, VouchEmbed } from '../../../utils/Embeds.js'
 import { del30, del5 } from '../../../utils/fun.js'
+import client from '../../../index.js'
 
 export class StatusCommand extends Command {
   constructor () {
@@ -23,10 +24,20 @@ export class StatusCommand extends Command {
     })
 
     if (!vouch) {
-      return message.channel.send('Unknown vouch').then(del5)
+      return message.channel
+        .send({
+          embeds: [
+            new BotEmbed({
+              title: 'Vouch not found',
+              description: `Vouch with id \`${args[0]}\` was not found`,
+              color: client.config.themeColors.ERROR
+            })
+          ]
+        })
+        .then(del5)
     }
 
-    const embed = VouchEmbed(vouch)
+    const embed = new VouchEmbed(vouch)
 
     await message
       .reply({

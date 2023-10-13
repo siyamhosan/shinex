@@ -1,7 +1,7 @@
-import { EmbedBuilder, Message } from 'discord.js'
+import { GuildMember, Message } from 'discord.js'
 import { Command, CommandRun } from 'dtscommands'
 import prisma from '../../../prisma.js'
-import { VouchNotification } from '../../../utils/Embeds.js'
+import { BotEmbed, VouchNotification } from '../../../utils/Embeds.js'
 import { CreatedVouch } from '../../../utils/vouch.js'
 
 export class VouchCmd extends Command {
@@ -21,24 +21,113 @@ export class VouchCmd extends Command {
       return message.reply('This command can only be used in a server')
     }
 
-    const user =
-      message.mentions.users?.first() || client.users.cache.get(args[0])
+    let user: GuildMember | undefined
+
+    if (args[0].startsWith('<@') && args[0].endsWith('>')) {
+      user = await message.guild?.members.fetch(
+        args[0].replace('<@', '').replace('>', '')
+      )
+    } else if (/\d+/.test(args[0])) {
+      user = await message.guild?.members.fetch(args[0])
+    } else if (args[0]) {
+      const users = await message.guild?.members.search({
+        query: args[0]
+      })
+      user = users?.first()
+    }
 
     const comment = args.slice(1).join(' ')
-    if (!user || !comment) {
-      return message.reply('Use Correctly `vouch <user> <comment>`').then(aDel)
+    if (!user) {
+      return message
+        .reply({
+          embeds: [
+            new BotEmbed({
+              title: 'Vouch Failed',
+              description: 'Please mention a valid user to vouch',
+              color: client.config.themeColors.ERROR
+            })
+          ]
+        })
+        .then(aDel)
+    }
+
+    if (user.user.bot) {
+      return message
+        .reply({
+          embeds: [
+            new BotEmbed({
+              title: 'Vouch Failed',
+              description: 'You cannot vouch a bot',
+              color: client.config.themeColors.ERROR
+            })
+          ]
+        })
+        .then(aDel)
+    }
+
+    if (!comment) {
+      return message
+        .reply({
+          embeds: [
+            new BotEmbed({
+              title: 'Vouch Failed',
+              description: 'Please provide a comment to vouch',
+              color: client.config.themeColors.ERROR
+            })
+          ]
+        })
+        .then(aDel)
+    }
+
+    if (comment.length > 240) {
+      return message
+        .reply({
+          embeds: [
+            new BotEmbed({
+              title: 'Vouch Failed',
+              description: 'Comment is too long.',
+              color: client.config.themeColors.ERROR
+            })
+          ]
+        })
+        .then(aDel)
+    }
+
+    if (!/\d/.test(comment)) {
+      return message
+        .reply({
+          embeds: [
+            new BotEmbed({
+              title: 'Vouch Failed',
+              description:
+                'Please mention a value of the trade in your comment.',
+              color: client.config.themeColors.ERROR
+            })
+          ]
+        })
+        .then(aDel)
     }
 
     if (user.id === message.author.id) {
-      return message.reply('You cannot vouch yourself').then(aDel)
+      return message
+        .reply({
+          embeds: [
+            new BotEmbed({
+              title: 'Vouch Failed',
+              description: 'You cannot vouch yourself',
+              color: client.config.themeColors.ERROR
+            })
+          ]
+        })
+        .then(aDel)
     }
 
     await message
       .reply({
         embeds: [
-          new EmbedBuilder({
+          new BotEmbed({
             title: 'Vouch Successful',
-            description: `You have vouched <@${user.id}> with the comment \`${comment}\``,
+            description: `You have vouched <@${user.id}> with the comment \`${comment}\`\n\nThank you for vouching!`,
             color: 0x1b03a3
           })
         ]
@@ -53,7 +142,7 @@ export class VouchCmd extends Command {
       data: {
         comment,
         receiverId: user.id,
-        receiverName: user.username,
+        receiverName: user.user.username,
         voucherId: message.author.id,
         voucherName: message.author.username,
         serverId: message.guild?.id,
@@ -62,7 +151,7 @@ export class VouchCmd extends Command {
           connectOrCreate: {
             create: {
               userId: user.id,
-              username: user.username
+              username: user.user.username
             },
             where: {
               userId: user.id

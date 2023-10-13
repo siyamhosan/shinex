@@ -31,7 +31,19 @@ export class ApproveVouchCmd extends Command {
       return message.channel.send('Vouch already approved').then(del5)
     }
 
-    await OnApprove(vouch, message.author)
+    if (
+      (vouch.receiverId === message.author.id ||
+        vouch.voucherId === message.author.id) &&
+      !process.env.DEV
+    ) {
+      return message
+        .reply({
+          content: 'You can not control vouches related to you!'
+        })
+        .then(del5)
+    }
+
+    await OnApprove(vouch, message.author, message)
 
     await message.channel.send({
       embeds: [

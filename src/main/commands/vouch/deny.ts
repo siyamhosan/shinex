@@ -30,12 +30,22 @@ export class DenyVouchCmd extends Command {
     } else if (vouch.vouchStatus === 'DENIED') {
       return message.channel.send('Vouch already denied').then(del5)
     }
-
+    if (
+      (vouch.receiverId === message.author.id ||
+        vouch.voucherId === message.author.id) &&
+      !process.env.DEV
+    ) {
+      return message
+        .reply({
+          content: 'You can not control vouches related to you!'
+        })
+        .then(del5)
+    }
     const reason =
       DenyReasons[args[1].toUpperCase() as keyof typeof DenyReasons] ||
       args.slice(1).join(' ')
 
-    await OnDeny(vouch, message.author, reason)
+    await OnDeny(vouch, message.author, message, reason)
 
     await message.channel.send({
       embeds: [
