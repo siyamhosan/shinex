@@ -19,7 +19,7 @@ export class DenyVouchCmd extends Command {
   }
 
   async run ({ message, args }: CommandRun) {
-    const vouch = await prisma.vouch.findFirst({
+    const vouch = await prisma.vouchs.findFirst({
       where: {
         id: parseInt(args[0])
       }

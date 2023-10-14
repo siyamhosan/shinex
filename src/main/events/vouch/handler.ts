@@ -24,7 +24,7 @@ export class VouchManager extends Event<'interactionCreate'> {
 
     await interaction.deferUpdate()
 
-    const vouch = await prisma.vouch.findUnique({
+    const vouch = await prisma.vouchs.findUnique({
       where: {
         id: parseInt(interaction.customId.split(':')[1])
       }
@@ -44,7 +44,9 @@ export class VouchManager extends Event<'interactionCreate'> {
           disableProofVoucher:
             interaction.customId.split(':')[2] === 'proofvoucher'
         }),
-        ...interaction.message.components.filter(c => c.components.length === 1)
+        ...interaction.message.components.filter(
+          (c) => c.components.length === 1
+        )
       ]
     })
 

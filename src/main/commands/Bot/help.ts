@@ -1,6 +1,5 @@
 import { Command, CommandRun } from 'dtscommands'
 import { BotEmbed } from '../../../utils/Embeds.js'
-import { Colors } from 'discord.js'
 import { del60 } from '../../../utils/fun.js'
 
 export class HelpCmd extends Command {

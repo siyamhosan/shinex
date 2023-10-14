@@ -1,4 +1,4 @@
-import { Profile, Vouch } from '@prisma/client'
+import { Profile, Vouchs } from '@prisma/client'
 import { APIEmbed, Colors, EmbedBuilder, EmbedData, User } from 'discord.js'
 import bot from '../index.js'
 import { IsLink } from './fun.js'
@@ -162,9 +162,9 @@ export function ProfileEmbed (profile: Profile, user: User) {
 export class VouchEmbed extends BotEmbed {
   private log: boolean
   private control: boolean
-  private vouch: Vouch
+  private vouch: Vouchs
 
-  constructor (vouch: Vouch, data: { control?: boolean; log?: boolean } = {}) {
+  constructor (vouch: Vouchs, data: { control?: boolean; log?: boolean } = {}) {
     super({
       title: 'Vouch Id: ' + vouch.id,
       description: `**Status:** ${

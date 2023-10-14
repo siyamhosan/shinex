@@ -1,6 +1,5 @@
 import { Command, CommandRun } from 'dtscommands'
 import { BotEmbed } from '../../../utils/Embeds.js'
-import { Colors } from 'discord.js'
 
 export class InviteCmd extends Command {
   constructor () {

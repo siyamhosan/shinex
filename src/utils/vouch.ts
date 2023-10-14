@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import { Vouch, VouchStatus } from '@prisma/client'
+import { Vouchs, VouchStatus } from '@prisma/client'
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -21,7 +21,7 @@ import {
   VOUCH_UNCHECKED_CHANNEL_ID
 } from '../config.js'
 
-export async function CreatedVouch (vouch: Vouch) {
+export async function CreatedVouch (vouch: Vouchs) {
   const VOUCH_LOG_CHANNEL = client.channels.cache.get(
     VOUCH_LOG_CHANNEL_ID
   ) as TextChannel
@@ -73,7 +73,7 @@ export async function CreatedVouch (vouch: Vouch) {
     components: [row, denySelectMenu]
   })
 
-  await prisma.vouch.update({
+  await prisma.vouchs.update({
     where: {
       id: vouch.id
     },
@@ -83,7 +83,7 @@ export async function CreatedVouch (vouch: Vouch) {
   })
 }
 
-export async function UpdateController (vouch: Vouch) {
+export async function UpdateController (vouch: Vouchs) {
   const VOUCH_LOG_CHANNEL = client.channels.cache.get(
     VOUCH_LOG_CHANNEL_ID
   ) as TextChannel
@@ -101,7 +101,7 @@ export async function UpdateController (vouch: Vouch) {
 }
 
 export async function OnApprove (
-  vouch: Vouch,
+  vouch: Vouchs,
   approver: User,
   message?: Message
 ) {
@@ -117,7 +117,7 @@ export async function OnApprove (
       console.log('Failed to send vouch notification to user')
     })
 
-  const updatedVouch = await prisma.vouch.update({
+  const updatedVouch = await prisma.vouchs.update({
     where: {
       id: vouch.id
     },
@@ -154,7 +154,7 @@ export async function OnApprove (
 }
 
 export async function OnDeny (
-  vouch: Vouch,
+  vouch: Vouchs,
   denier: User,
   message?: Message,
   reason: string | null = null
@@ -169,7 +169,7 @@ export async function OnDeny (
     embeds: [embed]
   })
 
-  const updatedVouch = await prisma.vouch.update({
+  const updatedVouch = await prisma.vouchs.update({
     where: {
       id: vouch.id
     },
@@ -196,7 +196,7 @@ export async function OnDeny (
 }
 
 export async function OnAskProof (
-  vouch: Vouch,
+  vouch: Vouchs,
   asker: User,
   to: 'RECEIVER' | 'VOUCHER',
   message?: Message
@@ -217,7 +217,7 @@ export async function OnAskProof (
     embeds: [embed]
   })
 
-  const updatedVouch = await prisma.vouch.update({
+  const updatedVouch = await prisma.vouchs.update({
     where: {
       id: vouch.id
     },
@@ -259,7 +259,7 @@ export async function OnAskProof (
   })
 }
 export function VouchControl (
-  vouch: Vouch,
+  vouch: Vouchs,
   { disableAccept, disableDeny, disableProofReceiver, disableProofVoucher } = {
     disableAccept: false,
     disableDeny: false,

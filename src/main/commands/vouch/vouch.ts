@@ -132,13 +132,13 @@ export class VouchCmd extends Command {
           })
         ]
       })
-      .then(msg => {
+      .then((msg) => {
         setTimeout(() => {
           msg.delete()
         }, 9000)
       })
 
-    const vouch = await prisma.vouch.create({
+    const vouch = await prisma.vouchs.create({
       data: {
         comment,
         receiverId: user.id,

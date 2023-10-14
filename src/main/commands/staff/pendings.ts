@@ -67,7 +67,7 @@ export class StaffVouchPending extends Command {
       })
     }
 
-    const vouches = await prisma.vouch.findMany({
+    const vouches = await prisma.vouchs.findMany({
       where: {
         receiverId: user.id
       },
