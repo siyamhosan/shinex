@@ -1,17 +1,18 @@
 import { Command, CommandRun } from 'dtscommands'
-import { VouchEmbed } from '../../../utils/Embeds.js'
-import { isAnyStaff } from '../../../utils/Validations.js'
+import { ShinexRoles, isAnyStaff } from '../../../utils/Validations.js'
 import { ExtractIdsAndReason, del30 } from '../../../utils/fun.js'
 import vouchClient from '../../../vouchClient.js'
-export class StatusCommand extends Command {
+import { VouchEmbed } from '../../../utils/Embeds.js'
+
+export class VouchDetailsCmd extends Command {
   constructor () {
     super({
-      name: 'status',
-      description: 'Shows the status of a vouch',
-      category: 'Vouch',
-      aliases: ['get'],
+      name: 'details',
+      description: 'Get details about a vouch',
+      category: 'staff',
       args: true,
-      usage: '<vouchId>'
+      aliases: ['detail'],
+      validation: [ShinexRoles.ShinexSeniorModValidation]
     })
   }
 
@@ -25,6 +26,7 @@ export class StatusCommand extends Command {
 
     for (const vouch of vouches) {
       const embed = new VouchEmbed(vouch)
+      embed.setActivities()
 
       if (!vouch.isRelevantTo && !isAnyStaff(message.author.id)) {
         embed

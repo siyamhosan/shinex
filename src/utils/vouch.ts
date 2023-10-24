@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import { Vouchs, VouchStatus } from '@prisma/client'
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -9,9 +8,7 @@ import {
   TextChannel,
   User
 } from 'discord.js'
-import { UpdateProfile } from '../cache/profile.js'
 import client from '../index.js'
-import prisma from '../prisma.js'
 import { VouchEmbed, VouchNotification } from './Embeds.js'
 import {
   VOUCH_ACCEPTED_CHANNEL_ID,
@@ -20,8 +17,10 @@ import {
   VOUCH_PENDING_CHANNEL_ID,
   VOUCH_UNCHECKED_CHANNEL_ID
 } from '../config.js'
+import { Vouch, VouchStatusSchema } from 'vouchapi'
+import vouchClient from '../vouchClient.js'
 
-export async function CreatedVouch (vouch: Vouchs) {
+export async function CreatedVouch (vouch: Vouch) {
   const VOUCH_LOG_CHANNEL = client.channels.cache.get(
     VOUCH_LOG_CHANNEL_ID
   ) as TextChannel
@@ -66,32 +65,64 @@ export async function CreatedVouch (vouch: Vouchs) {
     VOUCH_UNCHECKED_CHANNEL_ID
   ) as TextChannel
 
-  await VOUCH_UNCHECKED_CHANNEL.send({
+  const toCheckMessage = await VOUCH_UNCHECKED_CHANNEL.send({
     embeds: [embed.setControl(true)],
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     components: [row, denySelectMenu]
   })
 
-  await prisma.vouchs.update({
-    where: {
-      id: vouch.id
-    },
-    data: {
-      controllerMessageId: message.id
+  await vouchClient.vouches.update(vouch.id, {
+    customData: {
+      SHINEX_CONTROLLER_MESSAGE_ID: message.id,
+      SHINEX_UNCHECKED_MESSAGE_ID: toCheckMessage.id
     }
   })
 }
 
-export async function UpdateController (vouch: Vouchs) {
+export async function UpdateController (vouch: Vouch) {
   const VOUCH_LOG_CHANNEL = client.channels.cache.get(
     VOUCH_LOG_CHANNEL_ID
   ) as TextChannel
 
+  if (vouch.isApproved || vouch.isDenied || vouch.isPendingProof) {
+    try {
+      const toCheckChannel = (client.channels.cache.get(
+        VOUCH_UNCHECKED_CHANNEL_ID
+      ) ||
+        (await client.channels.fetch(
+          VOUCH_UNCHECKED_CHANNEL_ID
+        ))) as TextChannel
+
+      const toCheckMessage = await toCheckChannel.messages.fetch(
+        // @ts-ignore
+        (vouch.customData?.SHINEX_UNCHECKED_MESSAGE_ID as string) ?? ''
+      )
+      if (toCheckMessage) {
+        await toCheckMessage.delete().catch(() => null)
+      }
+
+      const pendingChannel = (client.channels.cache.get(
+        VOUCH_PENDING_CHANNEL_ID
+      ) ||
+        (await client.channels.fetch(VOUCH_PENDING_CHANNEL_ID))) as TextChannel
+
+      const pendingMessage = await pendingChannel.messages.fetch(
+        // @ts-ignore
+        (vouch.customData?.SHINEX_PENDING_MESSAGE_ID as string) ?? ''
+      )
+
+      if (pendingMessage) {
+        await pendingMessage.delete().catch(() => null)
+      }
+    } catch (error) {}
+  }
+
   const embed = new VouchEmbed(vouch)
 
   const message = await VOUCH_LOG_CHANNEL.messages.fetch(
-    vouch.controllerMessageId ?? ''
+    // @ts-ignore
+    (vouch.customData?.SHINEX_CONTROLLER_MESSAGE_ID as string) ?? ''
   )
   if (!message) return
 
@@ -101,7 +132,7 @@ export async function UpdateController (vouch: Vouchs) {
 }
 
 export async function OnApprove (
-  vouch: Vouchs,
+  vouch: Vouch,
   approver: User,
   message?: Message
 ) {
@@ -117,29 +148,16 @@ export async function OnApprove (
       console.log('Failed to send vouch notification to user')
     })
 
-  const updatedVouch = await prisma.vouchs.update({
-    where: {
-      id: vouch.id
-    },
-    data: {
-      vouchStatus: 'APPROVED',
-      controlledBy: approver.id,
-      controlledAt: new Date()
-    }
+  const updatedVouch = await vouchClient.vouches.approve(vouch.id, {
+    staffId: approver.id,
+    staffName: approver.username
   })
+
+  if (!updatedVouch) {
+    throw new Error('Vouch Not Found')
+  }
 
   await UpdateController(updatedVouch)
-
-  UpdateProfile(updatedVouch.receiverId, {
-    // @ts-ignore
-    positiveVouches: {
-      increment: 1
-    },
-    // @ts-ignore
-    latestComments: {
-      push: vouch.comment
-    }
-  })
 
   if (message) {
     await message.delete().catch(() => null)
@@ -154,7 +172,7 @@ export async function OnApprove (
 }
 
 export async function OnDeny (
-  vouch: Vouchs,
+  vouch: Vouch,
   denier: User,
   message?: Message,
   reason: string | null = null
@@ -169,17 +187,15 @@ export async function OnDeny (
     embeds: [embed]
   })
 
-  const updatedVouch = await prisma.vouchs.update({
-    where: {
-      id: vouch.id
-    },
-    data: {
-      vouchStatus: 'DENIED',
-      deniedReason: reason || DenyReasons.NONE,
-      controlledBy: denier.id,
-      controlledAt: new Date()
-    }
+  const updatedVouch = await vouchClient.vouches.deny(parseInt(vouch.id), {
+    staffId: denier.id,
+    staffName: denier.username,
+    reason: reason ?? 'NONE'
   })
+
+  if (!updatedVouch) {
+    throw new Error('Vouch Not Found')
+  }
 
   await UpdateController(updatedVouch)
 
@@ -196,7 +212,7 @@ export async function OnDeny (
 }
 
 export async function OnAskProof (
-  vouch: Vouchs,
+  vouch: Vouch,
   asker: User,
   to: 'RECEIVER' | 'VOUCHER',
   message?: Message
@@ -217,16 +233,18 @@ export async function OnAskProof (
     embeds: [embed]
   })
 
-  const updatedVouch = await prisma.vouchs.update({
-    where: {
-      id: vouch.id
+  const updatedVouch = await vouchClient.vouches.askProof(
+    parseInt(vouch.id),
+    {
+      staffId: asker.id,
+      staffName: asker.username
     },
-    data: {
-      vouchStatus: 'PENDING_PROOF',
-      controlledBy: asker.id,
-      controlledAt: new Date()
-    }
-  })
+    to
+  )
+
+  if (!updatedVouch) {
+    throw new Error('Vouch Not Found')
+  }
 
   await UpdateController(updatedVouch)
 
@@ -251,15 +269,27 @@ export async function OnAskProof (
     })
   )
 
-  await VOUCH_PENDING_CHANNEL.send({
+  const pendingMessage = await VOUCH_PENDING_CHANNEL.send({
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     components: updatedVouch.vouchStatus === 'PENDING_PROOF' ? [row] : [],
     embeds: [new VouchEmbed(updatedVouch)]
   })
+
+  const newCustomData = {
+    SHINEX_PENDING_MESSAGE_ID: pendingMessage.id
+  }
+
+  if (vouch.customData) {
+    Object.assign(newCustomData, vouch.customData)
+  }
+
+  await vouchClient.vouches.update(vouch.id, {
+    customData: newCustomData
+  })
 }
 export function VouchControl (
-  vouch: Vouchs,
+  vouch: Vouch,
   { disableAccept, disableDeny, disableProofReceiver, disableProofVoucher } = {
     disableAccept: false,
     disableDeny: false,
@@ -344,16 +374,23 @@ export const DenyReasons = {
     'The Vouch Must Contain English Sentences Only. Words From Other Languages Are Accepted But Not sentences. \nSo therefore, Vouch Is denied.'
 }
 
-export const VouchStatusMap: Record<VouchStatus, string> = {
+export const VouchStatusMap: Record<typeof VouchStatusSchema._type, string> = {
   APPROVED: '✅`Approved`',
+  APPROVED_WITH_PROOF: '✅`Approved With Proof`',
   DENIED: '❌`Denied`',
-  PENDING_PROOF: '📝`Pending Proof`',
-  UNCHECKED: '🔍`Unchecked`'
+  DENIED_FOR_PROOF: '❌`Denied For Proof`',
+  PENDING_PROOF_RECEIVER: '📝`Pending Proof`',
+  PENDING_PROOF_VOUCHER: '📝`Pending Proof`',
+  UNCHECKED: '🔍`Unchecked`',
+  DELETED: '🗑️`Deleted`'
 }
 
-export const VouchStatusShortMap: Record<string, VouchStatus> = {
-  PENDING: 'PENDING_PROOF',
-  PROOF: 'PENDING_PROOF',
+export const VouchStatusShortMap: Record<
+  string,
+  typeof VouchStatusSchema._type
+> = {
+  PENDING: 'PENDING_PROOF_RECEIVER',
+  PROOF: 'PENDING_PROOF_RECEIVER',
   APPROVE: 'APPROVED',
   APPROVED: 'APPROVED',
   DENY: 'DENIED',

@@ -1,6 +1,7 @@
 import { Command, CommandRun } from 'dtscommands'
 import { BotEmbed } from '../../../utils/Embeds.js'
 import { DenyReasons } from '../../../utils/vouch.js'
+import { ShinexRoles } from '../../../utils/Validations.js'
 
 export class DenyReasonCmd extends Command {
   constructor () {
@@ -8,7 +9,8 @@ export class DenyReasonCmd extends Command {
       name: 'denyreason',
       description: 'See the deny reasons for a vouch',
       category: 'Staff',
-      validation: ['vouch_staff']
+
+      validation: [ShinexRoles.ShinexStaffValidation]
     })
   }
 

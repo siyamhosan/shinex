@@ -2,24 +2,18 @@ import { Command, CommandRun } from 'dtscommands'
 import { BotEmbed } from '../../../utils/Embeds.js'
 import vouchClient from '../../../vouchClient.js'
 
-const Top3Emojis = [
-  '<:top1:1158322922298015794>',
-  '<:top2:1158322918221152286>',
-  '<:top3:1158322913036992634>'
-]
-
-export class TopCmd extends Command {
+export class LeaderBoardHot extends Command {
   constructor () {
     super({
-      name: 'top',
-      description: '',
+      name: 'hot',
+      description: 'Hot Users of the week',
       category: 'Leaderboard'
     })
   }
 
   async run ({ message }: CommandRun) {
     const embed = new BotEmbed({
-      title: 'Top 10 Users | Shinex Leaderboard',
+      title: 'Hot Users of this week | Shinex Leaderboard',
       color: 0x00ff00
     })
 
@@ -27,7 +21,7 @@ export class TopCmd extends Command {
       embeds: [embed]
     })
 
-    const top10 = await vouchClient.leaderboard.top10()
+    const top10 = await vouchClient.leaderboard.hot10()
 
     if (!top10?.length) {
       embed.setDescription('No users found.')
@@ -37,11 +31,10 @@ export class TopCmd extends Command {
     }
 
     const formatted = top10.map((user, index) => {
-      return `${
-        Top3Emojis[index] || `  **${index + 1}**  `
-      }| User: ${user.username.replace(/_/, '\\_')} - **${
-        user.importedVouches + user.positiveVouches
-      }** vouches`
+      return `${`  **${index + 1}**  `}| User: ${user.username.replace(
+        /_/,
+        '\\_'
+      )} - **${user.weeklyVouches}** vouches`
     })
 
     embed.setDescription(formatted.join('\n'))

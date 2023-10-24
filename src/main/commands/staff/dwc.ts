@@ -1,7 +1,9 @@
 import { Command, CommandRun } from 'dtscommands'
 import { BotEmbed } from '../../../utils/Embeds.js'
 import { Colors } from 'discord.js'
-import { UpdateProfile } from '../../../cache/profile.js'
+import { UserFromMessage } from '../../../utils/fun.js'
+import vouchClient from '../../../vouchClient.js'
+import { ShinexRoles } from '../../../utils/Validations.js'
 
 export class DwcCommand extends Command {
   constructor () {
@@ -11,14 +13,12 @@ export class DwcCommand extends Command {
       category: 'Staff',
       args: true,
       usage: '<user>',
-      validation: ['vouch_staff']
+      validation: [ShinexRoles.ShinexAdminValidation]
     })
   }
 
   async run ({ message, args }: CommandRun) {
-    const user =
-      message.mentions.users.first() ||
-      message.guild?.members.cache.get(args[0])?.user
+    const user = await UserFromMessage(message, args, false)
     if (!user) return message.reply('You must mention a user to DWC.')
     const reason = args.slice(1).join(' ')
     if (!reason) {
@@ -34,13 +34,21 @@ export class DwcCommand extends Command {
       text: 'DWC by ' + message.author.username + ' | Shinex'
     })
 
-    await UpdateProfile(user.id, {
-      profileStatus: 'WARN',
-      warningBy: message.author.id,
-      warningByUser: message.author.username,
-      waringReason: '⚠ DEAL WITH CAUTION ⚠',
-      warningAt: new Date()
-    })
+    await vouchClient.profiles.update(
+      {
+        id: user.id,
+        username: user.username
+      },
+      {
+        profileStatus: 'DEAL_WITH_CAUTION',
+        warning: {
+          reason,
+          by: message.author.id,
+          byUser: message.author.username,
+          at: new Date()
+        }
+      }
+    )
 
     await message.channel.send({
       embeds: [embed]

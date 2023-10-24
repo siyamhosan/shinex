@@ -1,7 +1,7 @@
 import { Command, CommandRun } from 'dtscommands'
-import { UpdateProfile } from '../../../cache/profile.js'
 import { ProfileEmbed } from '../../../utils/Embeds.js'
 import { del9 } from '../../../utils/fun.js'
+import vouchClient from '../../../vouchClient.js'
 
 export class SetShopCmd extends Command {
   constructor () {
@@ -13,13 +13,22 @@ export class SetShopCmd extends Command {
   }
 
   async run ({ message, args }: CommandRun) {
-    const shop = args.join(' ')
+    const shop = args.join(' ').trim()
 
-    const profile = await UpdateProfile(message.author.id, {
-      shop
-    })
+    if (shop.length > 200) {
+      return message.channel.send('Shop is too long').then(del9)
+    }
 
-    const embed = ProfileEmbed(profile, message.author)
+    const profile = await vouchClient.profiles.update(
+      { id: message.author.id, username: message.author.username },
+      { shop }
+    )
+
+    if (!profile) {
+      return message.channel.send('Failed to update profile').then(del9)
+    }
+
+    const embed = new ProfileEmbed(profile, message.author)
 
     await message.channel
       .send({

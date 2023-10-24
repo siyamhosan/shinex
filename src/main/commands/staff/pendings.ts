@@ -1,9 +1,10 @@
-import { GuildMember } from 'discord.js'
 import { Command, CommandRun } from 'dtscommands'
-import prisma from '../../../prisma.js'
+import { VouchStatusSchema } from 'vouchapi'
 import { BotEmbed } from '../../../utils/Embeds.js'
-import { VouchStatus } from '@prisma/client'
+import { UserFromMessage } from '../../../utils/fun.js'
 import { VouchStatusMap, VouchStatusShortMap } from '../../../utils/vouch.js'
+import vouchClient from '../../../vouchClient.js'
+import { ShinexRoles } from '../../../utils/Validations.js'
 
 export class StaffVouchPending extends Command {
   constructor () {
@@ -12,7 +13,9 @@ export class StaffVouchPending extends Command {
       description: 'View all pending vouches',
       category: 'Staff',
       usage: '<user> <type?>',
-      aliases: ['pendings', 'pendingvouches', 'pendingvouch']
+      aliases: ['pendings', 'pendingvouches', 'pendingvouch'],
+      validation: [ShinexRoles.ShinexStaffValidation],
+      args: true
     })
   }
 
@@ -22,21 +25,19 @@ export class StaffVouchPending extends Command {
       description: 'Loading pending vouches...'
     })
     const reply = await message.channel.send({ embeds: [replyEmbed] })
+    // if (!isAnyStaff(message.author.id)) {
+    //   return reply.edit({
+    //     embeds: [
+    //       replyEmbed
+    //         .setDescription(
+    //           'You do not have permission to view pending vouches'
+    //         )
+    //         .setColor(client.config.themeColors.ERROR)
+    //     ]
+    //   })
+    // }
 
-    let user: GuildMember | undefined
-
-    if (args[0].startsWith('<@') && args[0].endsWith('>')) {
-      user = await message.guild?.members.fetch(
-        args[0].replace('<@', '').replace('>', '')
-      )
-    } else if (/\d+/.test(args[0])) {
-      user = await message.guild?.members.fetch(args[0])
-    } else if (args[0]) {
-      const users = await message.guild?.members.search({
-        query: args[0]
-      })
-      user = users?.first()
-    }
+    const user = await UserFromMessage(message, args)
 
     if (!user) {
       return reply.edit({
@@ -52,7 +53,9 @@ export class StaffVouchPending extends Command {
 
     if (
       type &&
-      VouchStatusShortMap[type.toUpperCase() as VouchStatus] === undefined
+      VouchStatusShortMap[
+        type.toUpperCase() as typeof VouchStatusSchema._type
+      ] === undefined
     ) {
       return reply.edit({
         embeds: [
@@ -67,22 +70,18 @@ export class StaffVouchPending extends Command {
       })
     }
 
-    const vouches = await prisma.vouchs.findMany({
-      where: {
-        receiverId: user.id
-      },
-      select: {
-        id: true,
-        vouchStatus: true
-      }
-    })
+    const vouches = await vouchClient.vouches.fetchAll({ profileId: user.id })
 
     const pendingVouches = vouches.filter(
       vouch =>
         (!type ||
           vouch.vouchStatus ===
-            VouchStatusShortMap[type.toUpperCase() as VouchStatus]) &&
-        vouch.vouchStatus !== 'APPROVED'
+            VouchStatusShortMap[
+              type.toUpperCase() as typeof VouchStatusSchema._type
+            ]) &&
+        !vouch.isApproved &&
+        !vouch.isDenied &&
+        !vouch.isDeleted
     )
 
     if (!pendingVouches.length) {
@@ -116,8 +115,8 @@ export class StaffVouchPending extends Command {
             )
             .setColor(client.config.themeColors.SUCCESS)
             .setAuthor({
-              name: user.user.username,
-              iconURL: user.user.displayAvatarURL({ forceStatic: false })
+              name: user.username,
+              iconURL: user.displayAvatarURL({ forceStatic: false })
             })
             .setTitle(
               'Pending ' + (type || 'Vouches') + ' | ' + pendingVouches.length

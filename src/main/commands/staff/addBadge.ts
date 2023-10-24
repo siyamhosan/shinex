@@ -2,8 +2,10 @@
 import { Colors } from 'discord.js'
 import { Command, CommandRun } from 'dtscommands'
 import { BotEmbed } from '../../../utils/Embeds.js'
-import { UpdateProfile } from '../../../cache/profile.js'
-import { Badges } from '@prisma/client'
+import { UserFromMessage } from '../../../utils/fun.js'
+import vouchClient from '../../../vouchClient.js'
+import { BadgeType, Badges } from '../../../utils/profile.js'
+import { ShinexRoles } from '../../../utils/Validations.js'
 
 export class AddBadgeCmd extends Command {
   constructor () {
@@ -11,26 +13,22 @@ export class AddBadgeCmd extends Command {
       name: 'addbadge',
       description: 'Add a badge to a user',
       category: 'Staff',
-      validation: ['vouch_staff'],
+      validation: [ShinexRoles.ShinexAdminValidation],
       args: true,
       usage: '<user> <badge>'
     })
   }
 
   async run ({ message, args }: CommandRun) {
-    const user =
-      message.mentions.users.first() ||
-      message.guild?.members.cache.get(args[0])?.user
+    const user = await UserFromMessage(message, args, false)
+
     if (!user) return message.reply('You must mention a user to add badge.')
     const badge = args.slice(1).join(' ').toUpperCase()
     if (!badge) {
       return message.reply('You must provide a badge to add to the user.')
     }
 
-    if (
-      Badges[badge as Badges] === undefined ||
-      Badges[badge as Badges] === null
-    ) {
+    if (!Badges.includes(badge as BadgeType)) {
       return message.reply(
         'Invalid Badge\n' + Object.keys(Badges).join(', ') + '.'
       )
@@ -46,12 +44,22 @@ export class AddBadgeCmd extends Command {
       text: 'Badge added by ' + message.author.username + ' | Shinex'
     })
 
-    await UpdateProfile(user.id, {
-      // @ts-ignore
-      badges: {
-        push: badge
-      }
-    })
+    const profile =
+      vouchClient.profiles.cache.get(user.id) ||
+      (await vouchClient.profiles.fetch({
+        id: user.id,
+        username: user.username
+      }))
+    if (!profile) {
+      return message.channel.send('Failed to update profile')
+    }
+
+    const badges = profile.badges
+    if (badges.includes(badge)) {
+      return message.reply('User already has this badge.')
+    }
+
+    await profile.addBadge(badge)
 
     await message.channel.send({
       embeds: [embed]

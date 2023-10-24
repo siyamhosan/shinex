@@ -1,7 +1,9 @@
 import { Colors } from 'discord.js'
 import { Command, CommandRun } from 'dtscommands'
 import { BotEmbed } from '../../../utils/Embeds.js'
-import { UpdateProfile } from '../../../cache/profile.js'
+import { UserFromMessage } from '../../../utils/fun.js'
+import vouchClient from '../../../vouchClient.js'
+import { ShinexRoles } from '../../../utils/Validations.js'
 
 export class MarkCmd extends Command {
   constructor () {
@@ -11,14 +13,12 @@ export class MarkCmd extends Command {
       category: 'Staff',
       args: true,
       usage: '<user> <reason>',
-      validation: ['vouch_staff']
+      validation: [ShinexRoles.ShinexAdminValidation]
     })
   }
 
   async run ({ message, args }: CommandRun) {
-    const user =
-      message.mentions.users.first() ||
-      message.guild?.members.cache.get(args[0])?.user
+    const user = await UserFromMessage(message, args, false)
     if (!user) return message.reply('You must mention a user to mark.')
     const reason = args.slice(1).join(' ')
     if (!reason) {
@@ -34,13 +34,21 @@ export class MarkCmd extends Command {
       text: 'Marked by ' + message.author.username + ' | Shinex'
     })
 
-    await UpdateProfile(user.id, {
-      profileStatus: 'SCAMMER',
-      markedBy: message.author.id,
-      markedByUser: message.author.username,
-      markedFor: reason,
-      markedAt: new Date()
-    })
+    await vouchClient.profiles.update(
+      {
+        id: user.id,
+        username: user.username
+      },
+      {
+        profileStatus: 'SCAMMER',
+        mark: {
+          for: reason,
+          by: message.author.id,
+          byUser: message.author.username,
+          at: new Date()
+        }
+      }
+    )
 
     await message.channel.send({
       embeds: [embed]

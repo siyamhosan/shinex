@@ -1,7 +1,9 @@
 import { Colors } from 'discord.js'
 import { Command, CommandRun } from 'dtscommands'
-import { UpdateProfile } from '../../../cache/profile.js'
 import { BotEmbed } from '../../../utils/Embeds.js'
+import vouchClient from '../../../vouchClient.js'
+import { UserFromMessage } from '../../../utils/fun.js'
+import { ShinexRoles } from '../../../utils/Validations.js'
 
 export class UnMarkCmd extends Command {
   constructor () {
@@ -11,14 +13,12 @@ export class UnMarkCmd extends Command {
       category: 'Staff',
       args: true,
       usage: '<user>',
-      validation: ['vouch_staff']
+      validation: [ShinexRoles.ShinexAdminValidation]
     })
   }
 
   async run ({ message, args }: CommandRun) {
-    const user =
-      message.mentions.users.first() ||
-      message.guild?.members.cache.get(args[0])?.user
+    const user = await UserFromMessage(message, args, false)
     if (!user) return message.reply('You must mention a user to unmark.')
 
     const embed = new BotEmbed()
@@ -31,13 +31,17 @@ export class UnMarkCmd extends Command {
       text: 'Unmarked by ' + message.author.username + ' | Shinex'
     })
 
-    await UpdateProfile(user.id, {
-      profileStatus: 'GOOD',
-      markedBy: null,
-      markedByUser: null,
-      markedFor: null,
-      markedAt: null
-    })
+    await vouchClient.profiles.update(
+      {
+        id: user.id,
+        username: user.username
+      },
+      {
+        profileStatus: 'GOOD',
+        mark: {},
+        warning: {}
+      }
+    )
 
     await message.channel.send({
       embeds: [embed]

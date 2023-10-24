@@ -1,7 +1,14 @@
-import { GuildMember } from 'discord.js'
 import { Command, CommandRun } from 'dtscommands'
-import { GetProfile } from '../../../cache/profile.js'
 import { BotEmbed, ProfileEmbed } from '../../../utils/Embeds.js'
+import {
+  ColorsFromImage,
+  HexStringToInt,
+  UserFromMessage,
+  del25,
+  del60,
+  del9
+} from '../../../utils/fun.js'
+import vouchClient from '../../../vouchClient.js'
 
 export class ProfileCmd extends Command {
   constructor () {
@@ -15,50 +22,87 @@ export class ProfileCmd extends Command {
   }
 
   async run ({ message, args }: CommandRun) {
-    let user: GuildMember | null | undefined = message.member
+    const userFetchStart = new Date().getTime()
 
-    if (args[0] && args[0].startsWith('<@') && args[0].endsWith('>')) {
-      user = await message.guild?.members.fetch(
-        args[0].replace('<@', '').replace('>', '')
-      )
-    } else if (args[0] && /\d+/.test(args[0])) {
-      user = await message.guild?.members.fetch(args[0])
-    } else if (args[0]) {
-      const users = await message.guild?.members.search({
-        query: args[0]
-      })
-      user = users?.first()
-    }
+    const user = await UserFromMessage(message, args)
     if (!user) {
-      return message.reply('unknown user')
+      return message.reply('unknown user').then(del9)
     }
 
-    if (user.user.bot) return
+    console.trace(userFetchStart, 'User fetch time took: ')
+
+    if (user.bot) return
 
     const messageToReply = await message.channel.send({
       embeds: [
         new BotEmbed({
-          title: `${user.user.username}'s Profile`,
+          title: `${user.username}'s Profile`,
           color: 0x1b03a3,
-          description: 'Loading...'
+          thumbnail: {
+            url: user.displayAvatarURL()
+          },
+          description: `**ID:** ${user.id}\n**Age:**<t:${Math.floor(
+            user.createdAt.getTime() / 1000
+          )}:D>\n**Display Name:** ${user.displayName}\n**Mention:** <@${
+            user.id
+          }>`
         })
       ]
     })
 
-    const profile = await GetProfile(user.id, user.user.username)
+    const profileFetchStart = new Date().getTime()
+
+    const profile =
+      vouchClient.profiles.cache.get(user.id) ||
+      (await vouchClient.profiles.fetch({
+        id: user.id,
+        username: user.username
+      }))
+
+    console.trace(profileFetchStart, 'Profile fetch time took: ')
+
+    if (!profile) {
+      return messageToReply.edit({
+        embeds: [
+          new BotEmbed({
+            title: `${user.username}'s Profile`,
+            thumbnail: {
+              url: user.displayAvatarURL()
+            },
+            color: 0x1b03a3,
+            description: 'Failed to load profile'
+          })
+        ]
+      })
+    }
 
     try {
-      const embed = ProfileEmbed(profile, user.user)
+      const embed = new ProfileEmbed(profile, user)
 
       await messageToReply
         .edit({
           embeds: [embed]
         })
         .then(msg => {
-          setTimeout(() => {
-            msg.delete()
-          }, 25000)
+          if (message.author.id === user.id) {
+            del60(msg)
+          } else {
+            del25(msg)
+          }
         })
+
+      if (!profile.color) {
+        const colors = await ColorsFromImage(
+          user.displayAvatarURL({
+            forceStatic: true,
+            extension: 'png'
+          })
+        )
+        const color = HexStringToInt(colors[0])
+        await messageToReply.edit({
+          embeds: [embed.setColor(color)]
+        })
+      }
     } catch (error) {
       console.log(error)
     }

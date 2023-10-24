@@ -4,8 +4,8 @@ import 'dotenv/config.js'
 import { Bot, CommandManager, Compiler, EventManager } from 'dtscommands'
 import { writeFileSync } from 'fs'
 import path from 'path'
-import './prisma.js'
-import * as Role from './cache/role.js'
+import { Validations } from './utils/Validations.js'
+import './vouchClient.js'
 
 const bot = new Bot({
   commandsDir: path.join(process.cwd(), 'src', 'main', 'commands'),
@@ -15,23 +15,7 @@ const bot = new Bot({
   slashCommandsDir: path.join(process.cwd(), 'src', 'main', 'slashCommands'),
   mentionMessage: { content: 'My prefix is: `+`\nUse `+help` to get started!' },
   additionalPrefixes: process.env.DEV ? [] : ['-', ','],
-  customValidations: [
-    {
-      name: 'vouch_staff',
-      onFail: 'You are not a staff member!',
-      validate: ({ message, interaction }) => {
-        return (
-          Role.OwnerStaffs.has(
-            message?.author.id || interaction?.user.id || ''
-          ) ||
-          Role.AdminStaffs.has(
-            message?.author.id || interaction?.user.id || ''
-          ) ||
-          Role.VouchStaffs.has(message?.author.id || interaction?.user.id || '')
-        )
-      }
-    }
-  ]
+  customValidations: Validations
 })
 
 main()
@@ -84,13 +68,12 @@ async function main () {
   await CompileManager(bot.config.slashCommandsDir, 'slashCommands')
 
   await bot.login().then(() => {
-    console.log('Logged in')
+    if (process.env.DEV) return
     const watchers = [
       'unhandledRejection',
       'uncaughtException',
       'uncaughtExceptionMonitor'
     ]
-
     watchers.forEach(str => {
       process.on(str, console.error)
     })

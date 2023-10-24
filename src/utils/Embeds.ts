@@ -1,6 +1,5 @@
-import { Profile, Vouchs } from '@prisma/client'
 import { APIEmbed, Colors, EmbedBuilder, EmbedData, User } from 'discord.js'
-import bot from '../index.js'
+import { Profile, Vouch } from 'vouchapi'
 import { IsLink } from './fun.js'
 import { GetBadges } from './profile.js'
 import { DenyReasons, VouchStatusMap } from './vouch.js'
@@ -9,88 +8,84 @@ export class BotEmbed extends EmbedBuilder {
   constructor (data?: EmbedData | APIEmbed) {
     super(data)
     this.setFooter({
-      text: 'Shinex | Vouching System. discord.gg/9ZhRGmXcJK'
+      text: 'Shinex By ByteBender. Vouch Api'
     })
-    this.setColor(bot.config.themeColors.PRIMARY)
+    if (!data?.color) this.setColor(0x14abff)
     this.setTimestamp(new Date())
   }
 }
+export class ProfileEmbed extends BotEmbed {
+  constructor (profile: Profile, user: User) {
+    super()
+    this.setTitle(`${user.displayName}'s Profile`)
 
-export function ProfileEmbed (profile: Profile, user: User) {
-  const embed = new BotEmbed()
+    if (profile.isScammer && profile.mark) {
+      this.setColor(Colors.Red)
+      this.setDescription(
+        `**${user.username}(${user.id}) is a scammer!**\n**Marked:** ${
+          profile.mark?.for
+        }\n**Marked At:** <t:${Math.floor(
+          new Date(profile.mark?.at)?.getTime() / 1000
+        )}:D>`
+      )
+      this.setThumbnail(user.displayAvatarURL())
+      this.setFooter({
+        text: `Marked by ${profile.mark.by} | Shinex. discord.gg/9ZhRGmXcJK`
+      })
+    } else {
+      this.setDescription(
+        `${
+          profile.waring &&
+          (profile.isBlacklisted || profile.isDWC || profile.isBlacklisted)
+            ? `${profile.waring.reason}\n`
+            : ''
+        }**ID:** ${user.id}\n**Age:**<t:${Math.floor(
+          user.createdAt.getTime() / 1000
+        )}:D>\n**Display Name:** ${user.displayName}\n**Mention:** <@${
+          user.id
+        }>`
+      )
 
-  embed.setTitle(`${user.displayName}'s Profile`)
+      this.setFields(
+        {
+          name: '__Vouch Information__',
+          value: `**Positive:** ${profile.positiveVouches}\n**Import:** ${
+            profile.importedVouches
+          }\n**Overall:** ${profile.positiveVouches + profile.importedVouches}`,
+          inline: true
+        },
+        {
+          name: '__Badges__',
+          value: GetBadges(profile.badges),
+          inline: true
+        },
+        {
+          name: '__Products and Services__',
+          value: `**Shop:** ${profile.shop}\n**Forum:** ${
+            profile.forum
+          }\n**Products:** \n${profile.products.map(p => '- ' + p).join('\n')}`
+        },
+        {
+          name: '__Last 5 Comments__',
+          value: profile.latestComments.split(',').join('\n') || 'No comments'
+        }
+      )
 
-  if (
-    profile.profileStatus === 'SCAMMER' &&
-    profile.markedFor &&
-    profile.markedAt
-  ) {
-    embed.setColor(Colors.Red)
-    embed.setDescription(
-      `**${user.username}(${user.id}) is a scammer!**\n**Marked:** ${
-        profile.markedFor
-      }\n**Marked At:** <t:${Math.floor(profile.markedAt?.getTime() / 1000)}:D>`
-    )
-    embed.setThumbnail(user.displayAvatarURL())
-    embed.setFooter({
-      text: `Marked by ${profile.markedByUser} | Shinex. discord.gg/9ZhRGmXcJK`
-    })
+      if (profile.color) {
+        this.setColor(profile.color)
+      } else {
+        // TODO: Get Brightest Color from avatar and set it as embed color
+        this.setColor(0x1b03a3)
+      }
 
-    return embed
-  }
+      this.setThumbnail(user.displayAvatarURL())
 
-  embed.setDescription(
-    `${
-      profile.waringReason && profile.profileStatus === 'WARN'
-        ? `${profile.waringReason}\n`
-        : ''
-    }**ID:** ${user.id}\n**Age:**<t:${Math.floor(
-      user.createdAt.getTime() / 1000
-    )}:D>\n**Display Name:** ${user.displayName}\n**Mention:** <@${user.id}>`
-  )
-
-  embed.setFields(
-    {
-      name: '__Vouch Information__',
-      value: `**Positive:** ${profile.positiveVouches}\n**Import:** ${
-        profile.importedVouches
-      }\n**Overall:** ${profile.positiveVouches + profile.importedVouches}`
-    },
-    {
-      name: '__Badges__',
-      value: GetBadges(profile.badges)
-    },
-    {
-      name: '__Products and Services__',
-      value: `**Shop:** ${profile.shop}\n**Forum:** ${profile.forum}\n**Products:** ${profile.products}`
-    },
-    {
-      name: '__Last 5 Comments__',
-      value:
-        profile.latestComments
-          .slice(0, 5)
-          .map((comment, i) => `**${i + 1})** ${comment}`)
-          .join('\n') || 'No comments'
+      if (profile.banner && profile.banner !== '' && IsLink(profile.banner)) {
+        this.setImage(profile.banner)
+      }
     }
-  )
-
-  if (profile.color) {
-    embed.setColor(profile.color)
-  } else {
-    // TODO: Get Brightest Color from avatar and set it as embed color
-    embed.setColor(0x1b03a3)
   }
-
-  embed.setThumbnail(user.displayAvatarURL())
-
-  if (profile.banner && profile.banner !== '' && IsLink(profile.banner)) {
-    embed.setImage(profile.banner)
-  }
-
-  return embed
 }
-
 // export function VouchEmbed (
 //   vouch: Vouch,
 //   {
@@ -162,9 +157,9 @@ export function ProfileEmbed (profile: Profile, user: User) {
 export class VouchEmbed extends BotEmbed {
   private log: boolean
   private control: boolean
-  private vouch: Vouchs
+  private vouch: Vouch
 
-  constructor (vouch: Vouchs, data: { control?: boolean; log?: boolean } = {}) {
+  constructor (vouch: Vouch, data: { control?: boolean; log?: boolean } = {}) {
     super({
       title: 'Vouch Id: ' + vouch.id,
       description: `**Status:** ${
@@ -201,19 +196,10 @@ export class VouchEmbed extends BotEmbed {
       this.setLog(true)
     }
 
-    if (vouch.vouchStatus === 'APPROVED') this.setColor(Colors.Green)
-    else if (vouch.vouchStatus === 'DENIED') this.setColor(Colors.Red)
-    else if (vouch.vouchStatus === 'PENDING_PROOF') this.setColor(Colors.Yellow)
+    if (vouch.isApproved) this.setColor(Colors.Green)
+    else if (vouch.isDenied) this.setColor(Colors.Red)
+    else if (vouch.isPending) this.setColor(Colors.Yellow)
     else this.setColor(0x1b03a3)
-
-    if (vouch.controlledBy && vouch.controlledAt) {
-      this.addFields({
-        name: '__Controlled By__',
-        value: `**Mention:** <@${vouch.controlledBy}>\n**At:** <t:${Math.floor(
-          vouch.controlledAt.getTime() / 1000
-        )}:f>`
-      })
-    }
 
     if (vouch.vouchStatus === 'DENIED') {
       this.addFields({
@@ -238,6 +224,22 @@ export class VouchEmbed extends BotEmbed {
       text: `+approve ${this.vouch.id} | +deny ${this.vouch.id} | +askproof ${this.vouch.id}`
     })
     return this
+  }
+
+  setActivities () {
+    if (this.vouch.activities.length > 0) {
+      this.addFields({
+        name: '__Activities__',
+        value: this.vouch.activities
+          .map(
+            ({ activity, staffName, at }) =>
+              `${activity}:${staffName}:<t:${Math.floor(
+                new Date(at ?? '').getTime() / 1000
+              )}:f>`
+          )
+          .join('\n')
+      })
+    }
   }
 }
 

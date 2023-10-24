@@ -1,8 +1,9 @@
-import { GuildMember, Message } from 'discord.js'
+import { GuildMember } from 'discord.js'
 import { Command, CommandRun } from 'dtscommands'
-import prisma from '../../../prisma.js'
 import { BotEmbed, VouchNotification } from '../../../utils/Embeds.js'
+import { del9 } from '../../../utils/fun.js'
 import { CreatedVouch } from '../../../utils/vouch.js'
+import vouchClient from '../../../vouchClient.js'
 
 export class VouchCmd extends Command {
   constructor () {
@@ -48,7 +49,7 @@ export class VouchCmd extends Command {
             })
           ]
         })
-        .then(aDel)
+        .then(del9)
     }
 
     if (user.user.bot) {
@@ -62,7 +63,7 @@ export class VouchCmd extends Command {
             })
           ]
         })
-        .then(aDel)
+        .then(del9)
     }
 
     if (!comment) {
@@ -76,7 +77,7 @@ export class VouchCmd extends Command {
             })
           ]
         })
-        .then(aDel)
+        .then(del9)
     }
 
     if (comment.length > 240) {
@@ -90,7 +91,7 @@ export class VouchCmd extends Command {
             })
           ]
         })
-        .then(aDel)
+        .then(del9)
     }
 
     if (!/\d/.test(comment)) {
@@ -105,7 +106,7 @@ export class VouchCmd extends Command {
             })
           ]
         })
-        .then(aDel)
+        .then(del9)
     }
 
     if (user.id === message.author.id) {
@@ -119,7 +120,7 @@ export class VouchCmd extends Command {
             })
           ]
         })
-        .then(aDel)
+        .then(del9)
     }
 
     await message
@@ -132,48 +133,34 @@ export class VouchCmd extends Command {
           })
         ]
       })
-      .then((msg) => {
+      .then(msg => {
         setTimeout(() => {
           msg.delete()
         }, 9000)
       })
 
-    const vouch = await prisma.vouchs.create({
-      data: {
-        comment,
-        receiverId: user.id,
-        receiverName: user.user.username,
-        voucherId: message.author.id,
-        voucherName: message.author.username,
-        serverId: message.guild?.id,
-        serverName: message.guild?.name,
-        user: {
-          connectOrCreate: {
-            create: {
-              userId: user.id,
-              username: user.user.username
-            },
-            where: {
-              userId: user.id
-            }
-          }
-        }
-      }
+    const vouch = await vouchClient.vouches.post({
+      comment,
+      receiverId: user.id,
+      receiverName: user.user.username,
+      voucherId: message.author.id,
+      voucherName: message.author.username,
+      serverId: message.guild?.id,
+      serverName: message.guild?.name
     })
+
+    if (!vouch) {
+      message.react('❌')
+      return
+    }
 
     await user.send({
       embeds: [
         new VouchNotification({
-          description: `You have received a vouch \`${vouch.id}\` by \`${vouch.voucherName}\`.`
+          description: `You have received a vouch \`${vouch?.id}\` by \`${vouch?.voucherName}\`.`
         })
       ]
     })
     CreatedVouch(vouch)
   }
-}
-
-function aDel (msg: Message) {
-  setTimeout(() => {
-    msg.delete()
-  }, 5000)
 }

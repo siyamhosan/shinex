@@ -16,6 +16,8 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/chroma-js": "^2.4.2",
+    "@types/get-image-colors": "^4.0.4",
     "@types/node": "^20.2.1",
     "@typescript-eslint/eslint-plugin": "^5.59.6",
     "@typescript-eslint/parser": "^5.59.6",
@@ -32,9 +34,14 @@
   "dependencies": {
     "@prisma/client": "^5.1.1",
     "chalk": "^5.2.0",
+    "chroma-js": "^2.4.2",
     "discord.js": "^14.11.0",
     "dotenv": "^16.0.3",
     "dtscommands": "^0.1.8",
-    "table": "^6.8.1"
+    "get-image-colors": "^4.0.1",
+    "moment": "^2.29.4",
+    "node-vibrant": "3.2.1-alpha.1",
+    "table": "^6.8.1",
+    "vouchapi": "^0.0.12"
   }
 }

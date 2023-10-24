@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { ButtonInteraction, StringSelectMenuInteraction } from 'discord.js'
 import { Event } from 'dtscommands'
-import prisma from '../../../prisma.js'
 import {
   OnApprove,
   OnAskProof,
   OnDeny,
   VouchControl
 } from '../../../utils/vouch.js'
+import vouchClient from '../../../vouchClient.js'
 
 export class VouchManager extends Event<'interactionCreate'> {
   constructor () {
@@ -24,13 +24,22 @@ export class VouchManager extends Event<'interactionCreate'> {
 
     await interaction.deferUpdate()
 
-    const vouch = await prisma.vouchs.findUnique({
-      where: {
-        id: parseInt(interaction.customId.split(':')[1])
-      }
-    })
+    const vouch =
+      vouchClient.vouches.cache.get(interaction.customId.split(':')[1]) ||
+      (await vouchClient.vouches.fetch(interaction.customId.split(':')[1]))
 
     if (!vouch) return
+
+    if (
+      (vouch.receiverId === interaction.user.id ||
+        vouch.voucherId === interaction.user.id) &&
+      !process.env.DEV
+    ) {
+      return interaction.followUp({
+        content: 'You can not control vouches related to you!',
+        ephemeral: true
+      })
+    }
 
     // disable the buttons in the message
     await interaction.message.edit({
@@ -44,22 +53,9 @@ export class VouchManager extends Event<'interactionCreate'> {
           disableProofVoucher:
             interaction.customId.split(':')[2] === 'proofvoucher'
         }),
-        ...interaction.message.components.filter(
-          (c) => c.components.length === 1
-        )
+        ...interaction.message.components.filter(c => c.components.length === 1)
       ]
     })
-
-    if (
-      (vouch.receiverId === interaction.user.id ||
-        vouch.voucherId === interaction.user.id) &&
-      !process.env.DEV
-    ) {
-      return interaction.followUp({
-        content: 'You can not control vouches related to you!',
-        ephemeral: true
-      })
-    }
 
     switch (interaction.customId.split(':')[2]) {
       case 'accept':

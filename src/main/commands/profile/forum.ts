@@ -1,7 +1,7 @@
 import { Command, CommandRun } from 'dtscommands'
-import { UpdateProfile } from '../../../cache/profile.js'
 import { ProfileEmbed } from '../../../utils/Embeds.js'
 import { del9 } from '../../../utils/fun.js'
+import vouchClient from '../../../vouchClient.js'
 
 export class SetForumCmd extends Command {
   constructor () {
@@ -15,12 +15,24 @@ export class SetForumCmd extends Command {
   }
 
   async run ({ message, args }: CommandRun) {
-    const forum = args.join(' ')
-    const profile = await UpdateProfile(message.author.id, {
-      forum
-    })
+    const forum = args.join(' ').trim()
 
-    const embed = ProfileEmbed(profile, message.author)
+    if (forum.length > 200) {
+      return message.channel.send('Forum is too long').then(del9)
+    }
+
+    const profile = await vouchClient.profiles.update(
+      { id: message.author.id, username: message.author.username },
+      {
+        forum
+      }
+    )
+
+    if (!profile) {
+      return message.channel.send('Failed to update profile').then(del9)
+    }
+
+    const embed = new ProfileEmbed(profile, message.author)
 
     await message.channel
       .send({

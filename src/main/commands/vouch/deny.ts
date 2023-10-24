@@ -1,9 +1,10 @@
 import { Command, CommandRun } from 'dtscommands'
+import client from '../../../index.js'
 import { BotEmbed } from '../../../utils/Embeds.js'
-import { DenyReasons, OnDeny } from '../../../utils/vouch.js'
-import { Colors } from 'discord.js'
-import { del5 } from '../../../utils/fun.js'
-import prisma from '../../../prisma.js'
+import { ExtractIdsAndReason } from '../../../utils/fun.js'
+import { OnDeny } from '../../../utils/vouch.js'
+import vouchClient from '../../../vouchClient.js'
+import { ShinexRoles } from '../../../utils/Validations.js'
 
 export class DenyVouchCmd extends Command {
   constructor () {
@@ -12,48 +13,79 @@ export class DenyVouchCmd extends Command {
       description: 'Deny a vouch',
       category: 'Vouch',
       aliases: ['d'],
-      validation: ['vouch_staff'],
+
+      validation: [ShinexRoles.ShinexStaffValidation],
       args: true,
       usage: '<vouchId> <reason>'
     })
   }
 
   async run ({ message, args }: CommandRun) {
-    const vouch = await prisma.vouchs.findFirst({
-      where: {
-        id: parseInt(args[0])
-      }
+    const { ids, reason } = ExtractIdsAndReason(args.join(' '))
+    const vouches = await vouchClient.vouches.fetchAll({
+      vouchId: ids.map(i => i.trim()).join(',')
     })
 
-    if (!vouch) {
-      return message.channel.send('Vouch not found').then(del5)
-    } else if (vouch.vouchStatus === 'DENIED') {
-      return message.channel.send('Vouch already denied').then(del5)
-    }
-    if (
-      (vouch.receiverId === message.author.id ||
-        vouch.voucherId === message.author.id) &&
-      !process.env.DEV
-    ) {
-      return message
-        .reply({
-          content: 'You can not control vouches related to you!'
+    let description = 'Denying vouches\n**Reason**: ' + reason + '\n\n'
+    const embed = new BotEmbed()
+      .setTitle('Staff Tools')
+      .setDescription(description)
+
+    const replyMessage = await message.channel.send({
+      embeds: [embed]
+    })
+
+    let errorCount = 0
+
+    for (const vouch of vouches) {
+      if (vouch.isApproved) {
+        description += `Vouch with id \`${vouch.id}\` is already denied\n`
+        await replyMessage.edit({
+          embeds: [embed.setDescription(description)]
         })
-        .then(del5)
+        continue
+      }
+
+      if (
+        (vouch.receiverId === message.author.id ||
+          vouch.voucherId === message.author.id) &&
+        !process.env.DEV
+      ) {
+        description += `- Vouch with id \`${vouch.id}\` cannot be denied by the voucher or receiver\n`
+        await replyMessage.edit({
+          embeds: [embed.setDescription(description)]
+        })
+        continue
+      }
+
+      let error = false
+
+      await OnDeny(vouch, message.author, message, reason)
+        .catch(async () => {
+          description += `- Error denying vouch with id \`${vouch.id}\`\n`
+          await replyMessage.edit({
+            embeds: [embed.setDescription(description)]
+          })
+          error = true
+          errorCount++
+        })
+        .then(async () => {
+          if (error) return
+          description += `- Vouch with id \`${vouch.id}\` has been denied\n`
+          await replyMessage.edit({
+            embeds: [embed.setDescription(description)]
+          })
+        })
     }
-    const reason =
-      DenyReasons[args[1].toUpperCase() as keyof typeof DenyReasons] ||
-      args.slice(1).join(' ')
 
-    await OnDeny(vouch, message.author, message, reason)
-
-    await message.channel.send({
+    description +=
+      '\nDenied all vouches\nTotal vouches to deny: ' +
+      (vouches.length - errorCount)
+    await replyMessage.edit({
       embeds: [
-        new BotEmbed({
-          title: 'Vouch Denied',
-          description: `Vouch with id \`${vouch.id}\` has been denied by ${message.author} with reason \`${reason}\``,
-          color: Colors.Red
-        })
+        embed
+          .setDescription(description)
+          .setColor(client.config.themeColors.WARNING)
       ]
     })
   }

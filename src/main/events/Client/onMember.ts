@@ -1,6 +1,6 @@
 import { GuildMember } from 'discord.js'
 import { Event } from 'dtscommands'
-import { UpdateProfile } from '../../../cache/profile.js'
+import vouchClient from '../../../vouchClient.js'
 
 export class NewMember extends Event<'guildMemberAdd'> {
   constructor () {
@@ -14,14 +14,13 @@ export class NewMember extends Event<'guildMemberAdd'> {
     const guild = member.guild
     if (guild.id !== '1157258354821971998') return
 
-    await member.roles.add('1157693300074086423')
+    const profile = await vouchClient.profiles.fetch({
+      username: member.user.username,
+      id: member.id
+    })
 
-    await UpdateProfile(member.id, {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      badges: {
-        push: 'MEMBER'
-      }
-    }).catch(console.error)
+    if (!profile) return
+
+    await profile.addBadge('MEMBER')
   }
 }

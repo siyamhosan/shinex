@@ -1,6 +1,21 @@
-import { Badges } from '@prisma/client'
+export type BadgeType =
+  | 'EARLYSUPPORTER'
+  | 'MEMBER'
+  | 'APPEAL_STAFF'
+  | 'REPORT_STAFF'
+  | 'SHINEX_ADMIN'
+  | 'SHINEX_STAFF'
 
-export const BadgeEmojis: Record<Badges, string> = {
+export const Badges = [
+  'EARLYSUPPORTER',
+  'MEMBER',
+  'APPEAL_STAFF',
+  'REPORT_STAFF',
+  'SHINEX_ADMIN',
+  'SHINEX_STAFF'
+]
+
+export const BadgeEmojis: Record<BadgeType, string> = {
   EARLYSUPPORTER: '<:Early_ShineX:1157673614611583016> **Early Supporter**',
   MEMBER: '<:shinex2:1157695759622357052> **Member**',
   APPEAL_STAFF: '<:appeal_shinex_staff:1157677247914848267> **Appeal Staff**',
@@ -9,7 +24,14 @@ export const BadgeEmojis: Record<Badges, string> = {
   SHINEX_STAFF: '<:shinex_staff:1157677399778021437> **Shinex Staff**'
 }
 
-export function GetBadges (badges: Badges[]) {
+export function GetBadges (badges: string[]) {
   if (badges.length === 0) return 'No Badges'
-  return badges.map(badge => BadgeEmojis[badge]).join('\n')
+  const string = badges
+    .map(badge => {
+      return BadgeEmojis[badge as BadgeType]
+    })
+    .join('\n')
+
+  if (string === '' || !string) return 'No Badges'
+  return string
 }

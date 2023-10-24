@@ -1,9 +1,10 @@
 import { Command, CommandRun } from 'dtscommands'
-import prisma from '../../../prisma.js'
-import { OnApprove } from '../../../utils/vouch.js'
-import { del5 } from '../../../utils/fun.js'
 import { BotEmbed } from '../../../utils/Embeds.js'
-import { Colors } from 'discord.js'
+import { ExtractIdsAndReason } from '../../../utils/fun.js'
+import { OnApprove } from '../../../utils/vouch.js'
+import vouchClient from '../../../vouchClient.js'
+import client from '../../../index.js'
+import { ShinexRoles } from '../../../utils/Validations.js'
 
 export class ApproveVouchCmd extends Command {
   constructor () {
@@ -12,46 +13,78 @@ export class ApproveVouchCmd extends Command {
       description: 'Approve a vouch',
       category: 'Vouch',
       aliases: ['a', 'accept'],
-      validation: ['vouch_staff'],
+      validation: [ShinexRoles.ShinexStaffValidation],
       args: true,
       usage: '<vouchId>'
     })
   }
 
   async run ({ message, args }: CommandRun) {
-    const vouch = await prisma.vouchs.findFirst({
-      where: {
-        id: parseInt(args[0])
-      }
+    const { ids } = ExtractIdsAndReason(args.join(' '))
+    const vouches = await vouchClient.vouches.fetchAll({
+      vouchId: ids.map(i => i.trim()).join(',')
     })
 
-    if (!vouch) {
-      return message.channel.send('Vouch not found').then(del5)
-    } else if (vouch.vouchStatus === 'APPROVED') {
-      return message.channel.send('Vouch already approved').then(del5)
-    }
+    let description = 'Approving vouches\n'
+    const embed = new BotEmbed()
+      .setTitle('Staff Tools')
+      .setDescription(description)
 
-    if (
-      (vouch.receiverId === message.author.id ||
-        vouch.voucherId === message.author.id) &&
-      !process.env.DEV
-    ) {
-      return message
-        .reply({
-          content: 'You can not control vouches related to you!'
+    const replyMessage = await message.reply({
+      embeds: [embed]
+    })
+
+    let errorCount = 0
+
+    for (const vouch of vouches) {
+      if (vouch.isApproved) {
+        description += `Vouch with id \`${vouch.id}\` is already approved\n`
+        await replyMessage.edit({
+          embeds: [embed.setDescription(description)]
         })
-        .then(del5)
+        continue
+      }
+
+      if (
+        (vouch.receiverId === message.author.id ||
+          vouch.voucherId === message.author.id) &&
+        !process.env.DEV
+      ) {
+        description += `- Vouch with id \`${vouch.id}\` cannot be approved by the voucher or receiver\n`
+        await replyMessage.edit({
+          embeds: [embed.setDescription(description)]
+        })
+        continue
+      }
+
+      let error = false
+
+      await OnApprove(vouch, message.author, message)
+        .catch(async () => {
+          description += `- Error approving vouch with id \`${vouch.id}\`\n`
+          await replyMessage.edit({
+            embeds: [embed.setDescription(description)]
+          })
+          error = true
+          errorCount++
+        })
+        .then(async () => {
+          if (error) return
+          description += `- Vouch with id \`${vouch.id}\` has been approved\n`
+          await replyMessage.edit({
+            embeds: [embed.setDescription(description)]
+          })
+        })
     }
 
-    await OnApprove(vouch, message.author, message)
-
-    await message.channel.send({
+    description +=
+      '\nApproved all vouches\nTotal vouches to approved: ' +
+      (vouches.length - errorCount)
+    await replyMessage.edit({
       embeds: [
-        new BotEmbed({
-          title: 'Vouch Approved',
-          description: `Vouch with id \`${vouch.id}\` has been approved`,
-          color: Colors.Green
-        })
+        embed
+          .setDescription(description)
+          .setColor(client.config.themeColors.SUCCESS)
       ]
     })
   }
