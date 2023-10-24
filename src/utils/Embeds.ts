@@ -67,7 +67,11 @@ export class ProfileEmbed extends BotEmbed {
         },
         {
           name: '__Last 5 Comments__',
-          value: profile.latestComments.split(',').join('\n') || 'No comments'
+          value:
+            profile.latestComments
+              .split(',')
+              .map((c, i) => `**${i + 1})** ${c}`)
+              .join('\n') || 'No comments'
         }
       )
 

@@ -10,3 +10,8 @@ node_modules
 **/uniCommands-compiled.json
 
 **/bundled.ts
+
+/src/main/events/bundle/bundled.ts
+/src/main/commands/bundle/bundled.ts
+/src/main/slashCommands/bundle/bundled.ts
+pnpm-lock.yaml
