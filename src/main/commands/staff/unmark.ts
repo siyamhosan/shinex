@@ -18,7 +18,7 @@ export class UnMarkCmd extends Command {
   }
 
   async run ({ message, args }: CommandRun) {
-    const user = await UserFromMessage(message, args, false)
+    const user = await UserFromMessage(message, args)
     if (!user) return message.reply('You must mention a user to unmark.')
 
     const embed = new BotEmbed()

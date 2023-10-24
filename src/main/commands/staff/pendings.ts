@@ -37,7 +37,9 @@ export class StaffVouchPending extends Command {
     //   })
     // }
 
-    const user = await UserFromMessage(message, args)
+    const user = await UserFromMessage(message, args, {
+      authorFromMessageAsReply: true
+    })
 
     if (!user) {
       return reply.edit({

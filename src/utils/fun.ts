@@ -38,10 +38,18 @@ export function IsLink (url: string) {
   return url.match(/(https?:\/\/[^\s]+)/g)
 }
 
+interface UserFromMessageOptions {
+  authorAsDefault?: boolean
+  authorFromMessageAsReply?: boolean
+}
+
 export async function UserFromMessage (
   message: Message,
   args: string[],
-  authorAsDefault = true
+  { authorAsDefault, authorFromMessageAsReply }: UserFromMessageOptions = {
+    authorAsDefault: false,
+    authorFromMessageAsReply: false
+  }
 ) {
   let user: User | null | undefined = null
 
@@ -49,7 +57,7 @@ export async function UserFromMessage (
     user = await message.client?.users.fetch(
       args[0].replace('<@', '').replace('>', '')
     )
-  } else if (args[0] && /\d+/.test(args[0])) {
+  } else if (args[0] && /\b\d+\b/.test(args[0])) {
     user = await message.client?.users.fetch(args[0])
   } else if (args[0]) {
     user = message.client.users.cache.find(
@@ -58,6 +66,15 @@ export async function UserFromMessage (
         u.tag.toLowerCase().includes(args[0].toLowerCase()) ||
         u.displayName.toLowerCase().includes(args[0].toLowerCase())
     )
+  } else if (
+    authorFromMessageAsReply &&
+    message.reference &&
+    message.reference.messageId
+  ) {
+    const referencedMessage = await message.channel.messages.fetch(
+      message.reference.messageId
+    )
+    user = referencedMessage.author
   } else if (authorAsDefault && !user) {
     user = message.author
   }

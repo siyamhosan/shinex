@@ -20,7 +20,7 @@ export class AddBadgeCmd extends Command {
   }
 
   async run ({ message, args }: CommandRun) {
-    const user = await UserFromMessage(message, args, false)
+    const user = await UserFromMessage(message, args)
 
     if (!user) return message.reply('You must mention a user to add badge.')
     const badge = args.slice(1).join(' ').toUpperCase()

@@ -24,7 +24,10 @@ export class ProfileCmd extends Command {
   async run ({ message, args }: CommandRun) {
     const userFetchStart = new Date().getTime()
 
-    const user = await UserFromMessage(message, args)
+    const user = await UserFromMessage(message, args, {
+      authorAsDefault: true,
+      authorFromMessageAsReply: true
+    })
     if (!user) {
       return message.reply('unknown user').then(del9)
     }
