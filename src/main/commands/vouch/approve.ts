@@ -34,6 +34,16 @@ export class ApproveVouchCmd extends Command {
       embeds: [embed]
     })
 
+    if (!vouches.length) {
+      return replyMessage.edit({
+        embeds: [
+          embed
+            .setDescription('No vouches found')
+            .setColor(client.config.themeColors.ERROR)
+        ]
+      })
+    }
+
     let errorCount = 0
 
     for (const vouch of vouches) {
@@ -61,7 +71,7 @@ export class ApproveVouchCmd extends Command {
 
       await OnApprove(vouch, message.author, message)
         .catch(async () => {
-          description += `- Error approving vouch with id \`${vouch.id}\`\n`
+          description += `- Failed approving vouch with id \`${vouch.id}\`\n`
           await replyMessage.edit({
             embeds: [embed.setDescription(description)]
           })
@@ -77,14 +87,19 @@ export class ApproveVouchCmd extends Command {
         })
     }
 
+    const successCount = vouches.length - errorCount
+
     description +=
-      '\nApproved all vouches\nTotal vouches to approved: ' +
-      (vouches.length - errorCount)
+      '\nApproved all vouches\nTotal vouches to approved: ' + successCount
     await replyMessage.edit({
       embeds: [
         embed
           .setDescription(description)
-          .setColor(client.config.themeColors.SUCCESS)
+          .setColor(
+            successCount < errorCount
+              ? client.config.themeColors.ERROR
+              : client.config.themeColors.SUCCESS
+          )
       ]
     })
   }

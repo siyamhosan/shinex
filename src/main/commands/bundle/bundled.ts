@@ -12,7 +12,7 @@ import { VouchStatusSchema } from 'vouchapi'
 import { VouchStatusMap, VouchStatusShortMap, OnApprove, OnDeny, DenyReasons, CreatedVouch } from '../../../utils/vouch.js'
 import client from '../../../index.js'
 
-// Content From D:\Devloper project\DISCORD TS\shinex\src\main\commands/Bot/help.ts
+// Content From D:\DISCORD TS\shinex\src\main\commands/Bot/help.ts
 
 export class HelpCmd extends Command {
   constructor () {
@@ -96,7 +96,7 @@ export class HelpCmd extends Command {
   }
 }
 
-// Content From D:\Devloper project\DISCORD TS\shinex\src\main\commands/Bot/invite.ts
+// Content From D:\DISCORD TS\shinex\src\main\commands/Bot/invite.ts
 
 export class InviteCmd extends Command {
   constructor () {
@@ -120,7 +120,7 @@ export class InviteCmd extends Command {
   }
 }
 
-// Content From D:\Devloper project\DISCORD TS\shinex\src\main\commands/Bot/stat.ts
+// Content From D:\DISCORD TS\shinex\src\main\commands/Bot/stat.ts
 
 export class BotStatusCmd extends Command {
   constructor () {
@@ -143,16 +143,10 @@ export class BotStatusCmd extends Command {
       .replace(' weeks', 'w')
       .replace(' months', 'mo')
       .replace(' years', 'y')
-    console.log(
-      '🚀 ~ file: stat.ts:27 ~ StatusCmd ~ run ~ formatted:',
-      formatted
-    )
-
-    console.log(moment.duration(uptime, 'seconds').humanize())
   }
 }
 
-// Content From D:\Devloper project\DISCORD TS\shinex\src\main\commands/leaderboard/hot.ts
+// Content From D:\DISCORD TS\shinex\src\main\commands/leaderboard/hot.ts
 
 export class LeaderBoardHot extends Command {
   constructor () {
@@ -197,7 +191,7 @@ export class LeaderBoardHot extends Command {
   }
 }
 
-// Content From D:\Devloper project\DISCORD TS\shinex\src\main\commands/leaderboard/top.ts
+// Content From D:\DISCORD TS\shinex\src\main\commands/leaderboard/top.ts
 
 const Top3Emojis = [
   '<:top1:1158322922298015794>',
@@ -249,7 +243,7 @@ export class TopCmd extends Command {
   }
 }
 
-// Content From D:\Devloper project\DISCORD TS\shinex\src\main\commands/profile/banner.ts
+// Content From D:\DISCORD TS\shinex\src\main\commands/profile/banner.ts
 
 export class SetBannerCmd extends Command {
   constructor () {
@@ -293,7 +287,7 @@ export class SetBannerCmd extends Command {
   }
 }
 
-// Content From D:\Devloper project\DISCORD TS\shinex\src\main\commands/profile/forum.ts
+// Content From D:\DISCORD TS\shinex\src\main\commands/profile/forum.ts
 
 export class SetForumCmd extends Command {
   constructor () {
@@ -335,7 +329,7 @@ export class SetForumCmd extends Command {
   }
 }
 
-// Content From D:\Devloper project\DISCORD TS\shinex\src\main\commands/profile/products.ts
+// Content From D:\DISCORD TS\shinex\src\main\commands/profile/products.ts
 
 export class SetProductsCmd extends Command {
   constructor () {
@@ -376,7 +370,7 @@ export class SetProductsCmd extends Command {
   }
 }
 
-// Content From D:\Devloper project\DISCORD TS\shinex\src\main\commands/profile/profile.ts
+// Content From D:\DISCORD TS\shinex\src\main\commands/profile/profile.ts
 
 export class ProfileCmd extends Command {
   constructor () {
@@ -392,7 +386,10 @@ export class ProfileCmd extends Command {
   async run ({ message, args }: CommandRun) {
     const userFetchStart = new Date().getTime()
 
-    const user = await UserFromMessage(message, args)
+    const user = await UserFromMessage(message, args, {
+      authorAsDefault: true,
+      authorFromMessageAsReply: true
+    })
     if (!user) {
       return message.reply('unknown user').then(del9)
     }
@@ -477,7 +474,7 @@ export class ProfileCmd extends Command {
   }
 }
 
-// Content From D:\Devloper project\DISCORD TS\shinex\src\main\commands/profile/search.ts
+// Content From D:\DISCORD TS\shinex\src\main\commands/profile/search.ts
 
 export class SearchProductCmd extends Command {
   constructor () {
@@ -528,7 +525,7 @@ export class SearchProductCmd extends Command {
   }
 }
 
-// Content From D:\Devloper project\DISCORD TS\shinex\src\main\commands/profile/shop.ts
+// Content From D:\DISCORD TS\shinex\src\main\commands/profile/shop.ts
 
 export class SetShopCmd extends Command {
   constructor () {
@@ -566,7 +563,7 @@ export class SetShopCmd extends Command {
   }
 }
 
-// Content From D:\Devloper project\DISCORD TS\shinex\src\main\commands/staff/addBadge.ts
+// Content From D:\DISCORD TS\shinex\src\main\commands/staff/addBadge.ts
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
 export class AddBadgeCmd extends Command {
@@ -582,7 +579,7 @@ export class AddBadgeCmd extends Command {
   }
 
   async run ({ message, args }: CommandRun) {
-    const user = await UserFromMessage(message, args, false)
+    const user = await UserFromMessage(message, args)
 
     if (!user) return message.reply('You must mention a user to add badge.')
     const badge = args.slice(1).join(' ').toUpperCase()
@@ -629,7 +626,7 @@ export class AddBadgeCmd extends Command {
   }
 }
 
-// Content From D:\Devloper project\DISCORD TS\shinex\src\main\commands/staff/block.ts
+// Content From D:\DISCORD TS\shinex\src\main\commands/staff/block.ts
 
 export class BlockProfileCmd extends Command {
   constructor () {
@@ -648,7 +645,7 @@ export class BlockProfileCmd extends Command {
   }
 }
 
-// Content From D:\Devloper project\DISCORD TS\shinex\src\main\commands/staff/details.ts
+// Content From D:\DISCORD TS\shinex\src\main\commands/staff/details.ts
 
 export class VouchDetailsCmd extends Command {
   constructor () {
@@ -700,7 +697,7 @@ export class VouchDetailsCmd extends Command {
   }
 }
 
-// Content From D:\Devloper project\DISCORD TS\shinex\src\main\commands/staff/dwc.ts
+// Content From D:\DISCORD TS\shinex\src\main\commands/staff/dwc.ts
 
 export class DwcCommand extends Command {
   constructor () {
@@ -715,7 +712,7 @@ export class DwcCommand extends Command {
   }
 
   async run ({ message, args }: CommandRun) {
-    const user = await UserFromMessage(message, args, false)
+    const user = await UserFromMessage(message, args)
     if (!user) return message.reply('You must mention a user to DWC.')
     const reason = args.slice(1).join(' ')
     if (!reason) {
@@ -753,7 +750,7 @@ export class DwcCommand extends Command {
   }
 }
 
-// Content From D:\Devloper project\DISCORD TS\shinex\src\main\commands/staff/mark.ts
+// Content From D:\DISCORD TS\shinex\src\main\commands/staff/mark.ts
 
 export class MarkCmd extends Command {
   constructor () {
@@ -768,7 +765,7 @@ export class MarkCmd extends Command {
   }
 
   async run ({ message, args }: CommandRun) {
-    const user = await UserFromMessage(message, args, false)
+    const user = await UserFromMessage(message, args)
     if (!user) return message.reply('You must mention a user to mark.')
     const reason = args.slice(1).join(' ')
     if (!reason) {
@@ -806,7 +803,7 @@ export class MarkCmd extends Command {
   }
 }
 
-// Content From D:\Devloper project\DISCORD TS\shinex\src\main\commands/staff/pendings.ts
+// Content From D:\DISCORD TS\shinex\src\main\commands/staff/pendings.ts
 
 export class StaffVouchPending extends Command {
   constructor () {
@@ -816,8 +813,7 @@ export class StaffVouchPending extends Command {
       category: 'Staff',
       usage: '<user> <type?>',
       aliases: ['pendings', 'pendingvouches', 'pendingvouch'],
-      validation: [ShinexRoles.ShinexStaffValidation],
-      args: true
+      validation: [ShinexRoles.ShinexStaffValidation]
     })
   }
 
@@ -827,29 +823,10 @@ export class StaffVouchPending extends Command {
       description: 'Loading pending vouches...'
     })
     const reply = await message.channel.send({ embeds: [replyEmbed] })
-    // if (!isAnyStaff(message.author.id)) {
-    //   return reply.edit({
-    //     embeds: [
-    //       replyEmbed
-    //         .setDescription(
-    //           'You do not have permission to view pending vouches'
-    //         )
-    //         .setColor(client.config.themeColors.ERROR)
-    //     ]
-    //   })
-    // }
 
-    const user = await UserFromMessage(message, args)
-
-    if (!user) {
-      return reply.edit({
-        embeds: [
-          replyEmbed
-            .setDescription('User not found')
-            .setColor(client.config.themeColors.ERROR)
-        ]
-      })
-    }
+    const user = await UserFromMessage(message, args, {
+      authorFromMessageAsReply: true
+    })
 
     const type = args[1]
 
@@ -872,19 +849,11 @@ export class StaffVouchPending extends Command {
       })
     }
 
-    const vouches = await vouchClient.vouches.fetchAll({ profileId: user.id })
+    const vouches = await vouchClient.vouches.fetchAll({ profileId: user?.id })
 
-    const pendingVouches = vouches.filter(
-      vouch =>
-        (!type ||
-          vouch.vouchStatus ===
-            VouchStatusShortMap[
-              type.toUpperCase() as typeof VouchStatusSchema._type
-            ]) &&
-        !vouch.isApproved &&
-        !vouch.isDenied &&
-        !vouch.isDeleted
-    )
+    const pendingVouches = vouches
+      .filter(vouch => vouch.vouchStatus.toUpperCase() === 'UNCHECKED')
+      .sort((a, b) => Number(a.id) - Number(b.id))
 
     if (!pendingVouches.length) {
       return reply.edit({
@@ -910,15 +879,21 @@ export class StaffVouchPending extends Command {
                   if (type) {
                     return `${vouch.id}`
                   } else {
-                    return `${vouch.id} - ${VouchStatusMap[vouch.vouchStatus]}`
+                    return `${vouch.id} - ${
+                      VouchStatusMap[
+                        vouch.vouchStatus.toUpperCase() as typeof VouchStatusSchema._type
+                      ]
+                    }`
                   }
                 })
                 .join('\n')
             )
             .setColor(client.config.themeColors.SUCCESS)
             .setAuthor({
-              name: user.username,
-              iconURL: user.displayAvatarURL({ forceStatic: false })
+              name: user?.username || message.author.displayName,
+              iconURL:
+                user?.displayAvatarURL({ forceStatic: false }) ||
+                message.author.displayAvatarURL({ forceStatic: false })
             })
             .setTitle(
               'Pending ' + (type || 'Vouches') + ' | ' + pendingVouches.length
@@ -929,7 +904,7 @@ export class StaffVouchPending extends Command {
   }
 }
 
-// Content From D:\Devloper project\DISCORD TS\shinex\src\main\commands/staff/unmark.ts
+// Content From D:\DISCORD TS\shinex\src\main\commands/staff/unmark.ts
 
 export class UnMarkCmd extends Command {
   constructor () {
@@ -944,7 +919,7 @@ export class UnMarkCmd extends Command {
   }
 
   async run ({ message, args }: CommandRun) {
-    const user = await UserFromMessage(message, args, false)
+    const user = await UserFromMessage(message, args)
     if (!user) return message.reply('You must mention a user to unmark.')
 
     const embed = new BotEmbed()
@@ -975,7 +950,7 @@ export class UnMarkCmd extends Command {
   }
 }
 
-// Content From D:\Devloper project\DISCORD TS\shinex\src\main\commands/vouch/approve.ts
+// Content From D:\DISCORD TS\shinex\src\main\commands/vouch/approve.ts
 
 export class ApproveVouchCmd extends Command {
   constructor () {
@@ -1005,6 +980,16 @@ export class ApproveVouchCmd extends Command {
       embeds: [embed]
     })
 
+    if (!vouches.length) {
+      return replyMessage.edit({
+        embeds: [
+          embed
+            .setDescription('No vouches found')
+            .setColor(client.config.themeColors.ERROR)
+        ]
+      })
+    }
+
     let errorCount = 0
 
     for (const vouch of vouches) {
@@ -1032,7 +1017,7 @@ export class ApproveVouchCmd extends Command {
 
       await OnApprove(vouch, message.author, message)
         .catch(async () => {
-          description += `- Error approving vouch with id \`${vouch.id}\`\n`
+          description += `- Failed approving vouch with id \`${vouch.id}\`\n`
           await replyMessage.edit({
             embeds: [embed.setDescription(description)]
           })
@@ -1048,20 +1033,25 @@ export class ApproveVouchCmd extends Command {
         })
     }
 
+    const successCount = vouches.length - errorCount
+
     description +=
-      '\nApproved all vouches\nTotal vouches to approved: ' +
-      (vouches.length - errorCount)
+      '\nApproved all vouches\nTotal vouches to approved: ' + successCount
     await replyMessage.edit({
       embeds: [
         embed
           .setDescription(description)
-          .setColor(client.config.themeColors.SUCCESS)
+          .setColor(
+            successCount < errorCount
+              ? client.config.themeColors.ERROR
+              : client.config.themeColors.SUCCESS
+          )
       ]
     })
   }
 }
 
-// Content From D:\Devloper project\DISCORD TS\shinex\src\main\commands/vouch/delete.ts
+// Content From D:\DISCORD TS\shinex\src\main\commands/vouch/delete.ts
 
 export class DeleteVouchCmd extends Command {
   constructor () {
@@ -1140,7 +1130,7 @@ export class DeleteVouchCmd extends Command {
   }
 }
 
-// Content From D:\Devloper project\DISCORD TS\shinex\src\main\commands/vouch/deny.ts
+// Content From D:\DISCORD TS\shinex\src\main\commands/vouch/deny.ts
 
 export class DenyVouchCmd extends Command {
   constructor () {
@@ -1227,7 +1217,7 @@ export class DenyVouchCmd extends Command {
   }
 }
 
-// Content From D:\Devloper project\DISCORD TS\shinex\src\main\commands/vouch/denyReason.ts
+// Content From D:\DISCORD TS\shinex\src\main\commands/vouch/denyReason.ts
 
 export class DenyReasonCmd extends Command {
   constructor () {
@@ -1270,7 +1260,7 @@ export class DenyReasonCmd extends Command {
   }
 }
 
-// Content From D:\Devloper project\DISCORD TS\shinex\src\main\commands/vouch/status.ts
+// Content From D:\DISCORD TS\shinex\src\main\commands/vouch/status.ts
 
 export class StatusCommand extends Command {
   constructor () {
@@ -1321,7 +1311,7 @@ export class StatusCommand extends Command {
   }
 }
 
-// Content From D:\Devloper project\DISCORD TS\shinex\src\main\commands/vouch/vouch.ts
+// Content From D:\DISCORD TS\shinex\src\main\commands/vouch/vouch.ts
 
 export class VouchCmd extends Command {
   constructor () {
@@ -1441,49 +1431,62 @@ export class VouchCmd extends Command {
         .then(del9)
     }
 
-    await message
-      .reply({
-        embeds: [
-          new BotEmbed({
-            title: 'Vouch Successful',
-            description: `You have vouched <@${user.id}> with the comment \`${comment}\`\n\nThank you for vouching!`,
-            color: 0x1b03a3
+    await vouchClient.vouches
+      .post({
+        comment,
+        receiverId: user.id,
+        receiverName: user.user.username,
+        voucherId: message.author.id,
+        voucherName: message.author.username,
+        serverId: message.guild?.id,
+        serverName: message.guild?.name
+      })
+      .then(async vouch => {
+        await message
+          .reply({
+            embeds: [
+              new BotEmbed({
+                title: 'Vouch Successful',
+                description: `You have vouched <@${user?.id}> with the comment \`${comment}\`\n\nThank you for vouching!`,
+                color: 0x1b03a3
+              })
+            ]
           })
-        ]
-      })
-      .then(msg => {
-        setTimeout(() => {
-          msg.delete()
-        }, 9000)
-      })
+          .then(msg => {
+            setTimeout(() => {
+              msg.delete()
+            }, 9000)
+          })
 
-    const vouch = await vouchClient.vouches.post({
-      comment,
-      receiverId: user.id,
-      receiverName: user.user.username,
-      voucherId: message.author.id,
-      voucherName: message.author.username,
-      serverId: message.guild?.id,
-      serverName: message.guild?.name
-    })
+        if (!vouch) {
+          message.react('❌')
+          return
+        }
 
-    if (!vouch) {
-      message.react('❌')
-      return
-    }
-
-    await user.send({
-      embeds: [
-        new VouchNotification({
-          description: `You have received a vouch \`${vouch?.id}\` by \`${vouch?.voucherName}\`.`
+        await user?.send({
+          embeds: [
+            new VouchNotification({
+              description: `You have received a vouch \`${vouch?.id}\` by \`${vouch?.voucherName}\`.`
+            })
+          ]
         })
-      ]
-    })
-    CreatedVouch(vouch)
+        CreatedVouch(vouch)
+      })
+      .catch(e => {
+        message.reply({
+          embeds: [
+            new BotEmbed({
+              title: 'Vouch Failed',
+              description: '' + e,
+              color: client.config.themeColors.ERROR
+            })
+          ]
+        })
+      })
   }
 }
 
-// Content From D:\Devloper project\DISCORD TS\shinex\src\main\commands/vouch/vouchHelp.ts
+// Content From D:\DISCORD TS\shinex\src\main\commands/vouch/vouchHelp.ts
 
 export class VouchHelp extends Command {
   constructor () {

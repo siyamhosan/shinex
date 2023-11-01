@@ -36,8 +36,8 @@ dependencies:
     specifier: ^6.8.1
     version: 6.8.1
   vouchapi:
-    specifier: ^0.0.12
-    version: 0.0.12
+    specifier: ^0.0.13
+    version: 0.0.13
 
 devDependencies:
   '@types/chroma-js':
@@ -3471,8 +3471,8 @@ packages:
       extsprintf: 1.3.0
     dev: false
 
-  /vouchapi@0.0.12:
-    resolution: {integrity: sha512-UIvTREiOIFlyVhCd95UMg7wyizECXPOhcNMNaA1bit+S69yyBgIUNI0scbtKRKmBwaJ8S2Aglk8+udtFhrmsAA==}
+  /vouchapi@0.0.13:
+    resolution: {integrity: sha512-EbDAiw5AgJfAijZ/MqvLZ27hZyn+h8u9sCHoCTmRlPs9zMo2BXWftQ88a2sac3MS4PycWMdeQ6ETphkSf8Fr0w==}
     dependencies:
       '@ts-rest/core': 3.30.4(zod@3.22.4)
       abort-controller: 3.0.0

@@ -46,6 +46,11 @@ export class ProfileEmbed extends BotEmbed {
         }>`
       )
 
+      const comments = profile.latestComments
+        .split(',')
+        .map((c, i) => `**${i + 1})** ${c}`)
+        .join('\n')
+
       this.setFields(
         {
           name: '__Vouch Information__',
@@ -67,11 +72,7 @@ export class ProfileEmbed extends BotEmbed {
         },
         {
           name: '__Last 5 Comments__',
-          value:
-            profile.latestComments
-              .split(',')
-              .map((c, i) => `**${i + 1})** ${c}`)
-              .join('\n') || 'No comments'
+          value: profile.latestComments.length > 0 ? comments : 'No comments'
         }
       )
 

@@ -1,17 +1,5 @@
 build
 node_modules
-.env
-
-
-# ignore all files with compiled.json in end of file name one example is src/main/events/bundle/events-compiled.json  
-
-**/commands-compiled.json
-**/slashCommands-compiled.json
-**/uniCommands-compiled.json
-
-**/bundled.ts
-
-/src/main/events/bundle/bundled.ts
-/src/main/commands/bundle/bundled.ts
-/src/main/slashCommands/bundle/bundled.ts
+.env 
 pnpm-lock.yaml
+**/bundle/bundled.ts

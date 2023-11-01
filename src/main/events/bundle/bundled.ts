@@ -11,11 +11,11 @@ import chalk from 'chalk'
 import { ShinexRoles } from '../../../utils/Validations.js'
 import { OnApprove, OnAskProof, OnDeny, VouchControl } from '../../../utils/vouch.js'
 
-// Content From D:\Devloper project\DISCORD TS\shinex\src\main\events/Client/ready.ts
+// Content From D:\DISCORD TS\shinex\src\main\events/Client/ready.ts
 
 import * as Role from '../../../cache/role.js'
 
-// Content From D:\Devloper project\DISCORD TS\shinex\src\main\events/Client/onJoin.ts
+// Content From D:\DISCORD TS\shinex\src\main\events/Client/onJoin.ts
 
 export class OnJoinEvent extends Event<'guildCreate'> {
   constructor () {
@@ -81,7 +81,7 @@ export class OnJoinEvent extends Event<'guildCreate'> {
   }
 }
 
-// Content From D:\Devloper project\DISCORD TS\shinex\src\main\events/Client/onLeave.ts
+// Content From D:\DISCORD TS\shinex\src\main\events/Client/onLeave.ts
 
 export class OnLeaveEvent extends Event<'guildDelete'> {
   constructor () {
@@ -123,7 +123,7 @@ export class OnLeaveEvent extends Event<'guildDelete'> {
   }
 }
 
-// Content From D:\Devloper project\DISCORD TS\shinex\src\main\events/Client/onMember.ts
+// Content From D:\DISCORD TS\shinex\src\main\events/Client/onMember.ts
 
 export class NewMember extends Event<'guildMemberAdd'> {
   constructor () {
@@ -197,7 +197,7 @@ export class ReadyEvent extends Event<'ready'> {
   }
 }
 
-// Content From D:\Devloper project\DISCORD TS\shinex\src\main\events/vouch/handler.ts
+// Content From D:\DISCORD TS\shinex\src\main\events/vouch/handler.ts
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
 export class VouchManager extends Event<'interactionCreate'> {

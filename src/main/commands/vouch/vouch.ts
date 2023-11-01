@@ -123,44 +123,57 @@ export class VouchCmd extends Command {
         .then(del9)
     }
 
-    await message
-      .reply({
-        embeds: [
-          new BotEmbed({
-            title: 'Vouch Successful',
-            description: `You have vouched <@${user.id}> with the comment \`${comment}\`\n\nThank you for vouching!`,
-            color: 0x1b03a3
+    await vouchClient.vouches
+      .post({
+        comment,
+        receiverId: user.id,
+        receiverName: user.user.username,
+        voucherId: message.author.id,
+        voucherName: message.author.username,
+        serverId: message.guild?.id,
+        serverName: message.guild?.name
+      })
+      .then(async vouch => {
+        await message
+          .reply({
+            embeds: [
+              new BotEmbed({
+                title: 'Vouch Successful',
+                description: `You have vouched <@${user?.id}> with the comment \`${comment}\`\n\nThank you for vouching!`,
+                color: 0x1b03a3
+              })
+            ]
           })
-        ]
-      })
-      .then(msg => {
-        setTimeout(() => {
-          msg.delete()
-        }, 9000)
-      })
+          .then(msg => {
+            setTimeout(() => {
+              msg.delete()
+            }, 9000)
+          })
 
-    const vouch = await vouchClient.vouches.post({
-      comment,
-      receiverId: user.id,
-      receiverName: user.user.username,
-      voucherId: message.author.id,
-      voucherName: message.author.username,
-      serverId: message.guild?.id,
-      serverName: message.guild?.name
-    })
+        if (!vouch) {
+          message.react('❌')
+          return
+        }
 
-    if (!vouch) {
-      message.react('❌')
-      return
-    }
-
-    await user.send({
-      embeds: [
-        new VouchNotification({
-          description: `You have received a vouch \`${vouch?.id}\` by \`${vouch?.voucherName}\`.`
+        await user?.send({
+          embeds: [
+            new VouchNotification({
+              description: `You have received a vouch \`${vouch?.id}\` by \`${vouch?.voucherName}\`.`
+            })
+          ]
         })
-      ]
-    })
-    CreatedVouch(vouch)
+        CreatedVouch(vouch)
+      })
+      .catch(e => {
+        message.reply({
+          embeds: [
+            new BotEmbed({
+              title: 'Vouch Failed',
+              description: '' + e,
+              color: client.config.themeColors.ERROR
+            })
+          ]
+        })
+      })
   }
 }

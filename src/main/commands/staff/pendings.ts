@@ -14,8 +14,7 @@ export class StaffVouchPending extends Command {
       category: 'Staff',
       usage: '<user> <type?>',
       aliases: ['pendings', 'pendingvouches', 'pendingvouch'],
-      validation: [ShinexRoles.ShinexStaffValidation],
-      args: true
+      validation: [ShinexRoles.ShinexStaffValidation]
     })
   }
 
@@ -25,31 +24,10 @@ export class StaffVouchPending extends Command {
       description: 'Loading pending vouches...'
     })
     const reply = await message.channel.send({ embeds: [replyEmbed] })
-    // if (!isAnyStaff(message.author.id)) {
-    //   return reply.edit({
-    //     embeds: [
-    //       replyEmbed
-    //         .setDescription(
-    //           'You do not have permission to view pending vouches'
-    //         )
-    //         .setColor(client.config.themeColors.ERROR)
-    //     ]
-    //   })
-    // }
 
     const user = await UserFromMessage(message, args, {
       authorFromMessageAsReply: true
     })
-
-    if (!user) {
-      return reply.edit({
-        embeds: [
-          replyEmbed
-            .setDescription('User not found')
-            .setColor(client.config.themeColors.ERROR)
-        ]
-      })
-    }
 
     const type = args[1]
 
@@ -72,19 +50,11 @@ export class StaffVouchPending extends Command {
       })
     }
 
-    const vouches = await vouchClient.vouches.fetchAll({ profileId: user.id })
+    const vouches = await vouchClient.vouches.fetchAll({ profileId: user?.id })
 
-    const pendingVouches = vouches.filter(
-      vouch =>
-        (!type ||
-          vouch.vouchStatus ===
-            VouchStatusShortMap[
-              type.toUpperCase() as typeof VouchStatusSchema._type
-            ]) &&
-        !vouch.isApproved &&
-        !vouch.isDenied &&
-        !vouch.isDeleted
-    )
+    const pendingVouches = vouches
+      .filter(vouch => vouch.vouchStatus.toUpperCase() === 'UNCHECKED')
+      .sort((a, b) => Number(a.id) - Number(b.id))
 
     if (!pendingVouches.length) {
       return reply.edit({
@@ -110,15 +80,21 @@ export class StaffVouchPending extends Command {
                   if (type) {
                     return `${vouch.id}`
                   } else {
-                    return `${vouch.id} - ${VouchStatusMap[vouch.vouchStatus]}`
+                    return `${vouch.id} - ${
+                      VouchStatusMap[
+                        vouch.vouchStatus.toUpperCase() as typeof VouchStatusSchema._type
+                      ]
+                    }`
                   }
                 })
                 .join('\n')
             )
             .setColor(client.config.themeColors.SUCCESS)
             .setAuthor({
-              name: user.username,
-              iconURL: user.displayAvatarURL({ forceStatic: false })
+              name: user?.username || message.author.displayName,
+              iconURL:
+                user?.displayAvatarURL({ forceStatic: false }) ||
+                message.author.displayAvatarURL({ forceStatic: false })
             })
             .setTitle(
               'Pending ' + (type || 'Vouches') + ' | ' + pendingVouches.length
