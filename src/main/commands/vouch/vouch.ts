@@ -2,7 +2,6 @@ import { GuildMember } from 'discord.js'
 import { Command, CommandRun } from 'dtscommands'
 import { BotEmbed, VouchNotification } from '../../../utils/Embeds.js'
 import { del9 } from '../../../utils/fun.js'
-import { CreatedVouch } from '../../../utils/vouch.js'
 import vouchClient from '../../../vouchClient.js'
 
 export class VouchCmd extends Command {
@@ -162,7 +161,6 @@ export class VouchCmd extends Command {
             })
           ]
         })
-        CreatedVouch(vouch)
       })
       .catch(e => {
         message.reply({

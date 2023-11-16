@@ -9,7 +9,7 @@ import { Colors, GuildMember } from 'discord.js'
 import { BadgeType, Badges } from '../../../utils/profile.js'
 import { ShinexRoles, isAnyStaff } from '../../../utils/Validations.js'
 import { VouchStatusSchema } from 'vouchapi'
-import { VouchStatusMap, VouchStatusShortMap, OnApprove, OnDeny, DenyReasons, CreatedVouch } from '../../../utils/vouch.js'
+import { VouchStatusMap, VouchStatusShortMap, OnApprove, OnDeny, DenyReasons } from '../../../utils/vouch.js'
 import client from '../../../index.js'
 
 // Content From D:\DISCORD TS\shinex\src\main\commands/Bot/help.ts
@@ -1001,17 +1001,17 @@ export class ApproveVouchCmd extends Command {
         continue
       }
 
-      if (
-        (vouch.receiverId === message.author.id ||
-          vouch.voucherId === message.author.id) &&
-        !process.env.DEV
-      ) {
-        description += `- Vouch with id \`${vouch.id}\` cannot be approved by the voucher or receiver\n`
-        await replyMessage.edit({
-          embeds: [embed.setDescription(description)]
-        })
-        continue
-      }
+      // if (
+      //   (vouch.receiverId === message.author.id ||
+      //     vouch.voucherId === message.author.id) &&
+      //   !process.env.DEV
+      // ) {
+      //   description += `- Vouch with id \`${vouch.id}\` cannot be approved by the voucher or receiver\n`
+      //   await replyMessage.edit({
+      //     embeds: [embed.setDescription(description)]
+      //   })
+      //   continue
+      // }
 
       let error = false
 
@@ -1172,17 +1172,17 @@ export class DenyVouchCmd extends Command {
         continue
       }
 
-      if (
-        (vouch.receiverId === message.author.id ||
-          vouch.voucherId === message.author.id) &&
-        !process.env.DEV
-      ) {
-        description += `- Vouch with id \`${vouch.id}\` cannot be denied by the voucher or receiver\n`
-        await replyMessage.edit({
-          embeds: [embed.setDescription(description)]
-        })
-        continue
-      }
+      // if (
+      //   (vouch.receiverId === message.author.id ||
+      //     vouch.voucherId === message.author.id) &&
+      //   !process.env.DEV
+      // ) {
+      //   description += `- Vouch with id \`${vouch.id}\` cannot be denied by the voucher or receiver\n`
+      //   await replyMessage.edit({
+      //     embeds: [embed.setDescription(description)]
+      //   })
+      //   continue
+      // }
 
       let error = false
 
@@ -1470,7 +1470,6 @@ export class VouchCmd extends Command {
             })
           ]
         })
-        CreatedVouch(vouch)
       })
       .catch(e => {
         message.reply({

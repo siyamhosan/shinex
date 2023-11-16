@@ -55,17 +55,17 @@ export class ApproveVouchCmd extends Command {
         continue
       }
 
-      if (
-        (vouch.receiverId === message.author.id ||
-          vouch.voucherId === message.author.id) &&
-        !process.env.DEV
-      ) {
-        description += `- Vouch with id \`${vouch.id}\` cannot be approved by the voucher or receiver\n`
-        await replyMessage.edit({
-          embeds: [embed.setDescription(description)]
-        })
-        continue
-      }
+      // if (
+      //   (vouch.receiverId === message.author.id ||
+      //     vouch.voucherId === message.author.id) &&
+      //   !process.env.DEV
+      // ) {
+      //   description += `- Vouch with id \`${vouch.id}\` cannot be approved by the voucher or receiver\n`
+      //   await replyMessage.edit({
+      //     embeds: [embed.setDescription(description)]
+      //   })
+      //   continue
+      // }
 
       let error = false
 

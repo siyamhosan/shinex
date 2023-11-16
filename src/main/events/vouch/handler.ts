@@ -30,16 +30,16 @@ export class VouchManager extends Event<'interactionCreate'> {
 
     if (!vouch) return
 
-    if (
-      (vouch.receiverId === interaction.user.id ||
-        vouch.voucherId === interaction.user.id) &&
-      !process.env.DEV
-    ) {
-      return interaction.followUp({
-        content: 'You can not control vouches related to you!',
-        ephemeral: true
-      })
-    }
+    // if (
+    //   (vouch.receiverId === interaction.user.id ||
+    //     vouch.voucherId === interaction.user.id) &&
+    //   !process.env.DEV
+    // ) {
+    //   return interaction.followUp({
+    //     content: 'You can not control vouches related to you!',
+    //     ephemeral: true
+    //   })
+    // }
 
     // disable the buttons in the message
     await interaction.message.edit({

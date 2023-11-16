@@ -94,10 +94,12 @@ export async function UpdateController (vouch: Vouch) {
           VOUCH_UNCHECKED_CHANNEL_ID
         ))) as TextChannel
 
-      const toCheckMessage = await toCheckChannel.messages.fetch(
-        // @ts-ignore
-        (vouch.customData?.SHINEX_UNCHECKED_MESSAGE_ID as string) ?? ''
-      )
+      const toCheckMessage = await toCheckChannel.messages
+        .fetch(
+          // @ts-ignore
+          (vouch.customData?.SHINEX_UNCHECKED_MESSAGE_ID as string) ?? ''
+        )
+        .catch(() => null)
       if (toCheckMessage) {
         await toCheckMessage.delete().catch(() => null)
       }
@@ -107,10 +109,12 @@ export async function UpdateController (vouch: Vouch) {
       ) ||
         (await client.channels.fetch(VOUCH_PENDING_CHANNEL_ID))) as TextChannel
 
-      const pendingMessage = await pendingChannel.messages.fetch(
-        // @ts-ignore
-        (vouch.customData?.SHINEX_PENDING_MESSAGE_ID as string) ?? ''
-      )
+      const pendingMessage = await pendingChannel.messages
+        .fetch(
+          // @ts-ignore
+          (vouch.customData?.SHINEX_PENDING_MESSAGE_ID as string) ?? ''
+        )
+        .catch(() => null)
 
       if (pendingMessage) {
         await pendingMessage.delete().catch(() => null)
